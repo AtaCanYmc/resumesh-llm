@@ -13,6 +13,7 @@ from resumesh_llm.core.exceptions import (
 )
 from resumesh_llm.core.factory import LLMClientFactory
 from resumesh_llm.core.models import GenerationUsage, LLMRequest, LLMResponse
+from resumesh_llm.core.prompt_loader import PromptLoader
 
 __all__ = [
     "LLMError",
@@ -28,4 +29,5 @@ __all__ = [
     "OllamaClient",
     "MockClient",
     "LLMClientFactory",
+    "PromptLoader",
 ]

@@ -1,0 +1,25 @@
+Compare the candidate's CV/Resume text against the Job Description.
+
+CV/Resume Content:
+---
+{{ cv_text }}
+---
+
+Job Description:
+---
+{{ job_description }}
+---
+
+Evaluate the alignment and generate a JSON object with:
+1. "match_score": An integer between 0 and 100 based on keyword overlap, level of experience match, and technical alignment.
+2. "missing_skills": Top skills, libraries, technologies, or keywords required in the job description that are not mentioned in the CV.
+3. "matching_skills": Technologies or skills mentioned in both documents.
+4. "suggestions": Concise, actionable bullets advising the candidate on how to rewrite or re-highlight sections to better fit the role.
+
+Your response must be a single, valid JSON object matching this schema:
+{
+    "match_score": 75,
+    "missing_skills": ["string"],
+    "matching_skills": ["string"],
+    "suggestions": ["string"]
+}

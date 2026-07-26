@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from resumesh_llm.core.client import LLMClient
 from resumesh_llm.core.models import LLMRequest
+from resumesh_llm.core.prompt_loader import PromptLoader
 
 
 class GitHubRepoInput(BaseModel):
@@ -70,37 +71,20 @@ class GitHubSummarizer:
         """
         truncated_readme = self._truncate_readme(repo.readme_content)
 
-        system_instruction = (
-            "You are a professional technical writer and resume coach. "
-            "Your task is to analyze a developer's GitHub repository and summarize it professionally for their portfolio/resume."
+        system_instruction = PromptLoader.load_and_render(
+            domain="github", template_name="summarize_repo_system"
         )
 
-        prompt = f"""
-Analyze the following raw GitHub repository details:
-Repository Name: {repo.repo_name}
-Original Description: {repo.description or "None provided"}
-Primary Languages (GitHub detected): {', '.join(repo.languages)}
-Stats: {repo.stars} stars, {repo.forks} forks
-
-README.md Snippet:
----
-{truncated_readme}
----
-
-Generate a professional, structured JSON object with the following fields:
-1. "summary": A concise (2-3 sentences), professional, impact-driven description of what the project is, what problem it solves, and the key technology stack used. Focus on value and architectural clarity. Avoid generic phrases like "This repository is...".
-2. "tags": A clean list of 4-6 technical tags/topics representing the domain, concepts, or tools (e.g. ["OAuth2", "CI/CD", "Websockets", "Microservices"]).
-3. "languages": Refined list of the actual core languages and prominent frameworks/libraries used (e.g. ["Python", "FastAPI", "React", "TypeScript"]).
-4. "highlights": A list of 2-3 professional, bullet-point highlights of the technical accomplishments, features, or architectural decisions in the project (e.g. "Designed a high-throughput queue using Redis", "Built responsive UI utilizing CSS variables").
-
-Your response must be a single, valid JSON object matching this schema:
-{{
-    "summary": "string",
-    "tags": ["string"],
-    "languages": ["string"],
-    "highlights": ["string"]
-}}
-"""
+        prompt = PromptLoader.load_and_render(
+            domain="github",
+            template_name="summarize_repo_user",
+            repo_name=repo.repo_name,
+            description=repo.description,
+            languages=repo.languages,
+            stars=repo.stars,
+            forks=repo.forks,
+            readme_content=truncated_readme,
+        )
 
         request = LLMRequest(
             prompt=prompt,

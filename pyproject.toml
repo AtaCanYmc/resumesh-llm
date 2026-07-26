@@ -36,6 +36,9 @@ dev = [
 where = ["src"]
 include = ["resumesh_llm*"]
 
+[tool.setuptools.package-data]
+"resumesh_llm" = ["prompts/**/*.txt"]
+
 [tool.black]
 line-length = 88
 target-version = ['py310', 'py311', 'py312']

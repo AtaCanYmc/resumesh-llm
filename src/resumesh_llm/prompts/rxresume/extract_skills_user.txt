@@ -1,0 +1,18 @@
+Analyze the following text and extract all professional skills, tools, and platforms mentioned or strongly implied.
+
+Text:
+---
+{{ text }}
+---
+
+Categorize them into:
+1. "hard_skills": Languages, frameworks, core software engineering practices, databases, methodologies (e.g., Python, SQL, REST APIs, TDD).
+2. "soft_skills": Interpersonal, leadership, or execution attributes (e.g., Team Management, Agile, Public Speaking).
+3. "tools_and_platforms": Specific software tools, cloud providers, or platforms (e.g., AWS, Git, Docker, Kubernetes, Jira).
+
+Your response must be a single, valid JSON object matching this schema:
+{
+    "hard_skills": ["string"],
+    "soft_skills": ["string"],
+    "tools_and_platforms": ["string"]
+}

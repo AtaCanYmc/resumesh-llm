@@ -1,0 +1,24 @@
+Analyze the following raw GitHub repository details:
+Repository Name: {{ repo_name }}
+Original Description: {{ description or "None provided" }}
+Primary Languages (GitHub detected): {{ languages | join(', ') }}
+Stats: {{ stars }} stars, {{ forks }} forks
+
+README.md Snippet:
+---
+{{ readme_content }}
+---
+
+Generate a professional, structured JSON object with the following fields:
+1. "summary": A concise (2-3 sentences), professional, impact-driven description of what the project is, what problem it solves, and the key technology stack used. Focus on value and architectural clarity. Avoid generic phrases like "This repository is...".
+2. "tags": A clean list of 4-6 technical tags/topics representing the domain, concepts, or tools (e.g. ["OAuth2", "CI/CD", "Websockets", "Microservices"]).
+3. "languages": Refined list of the actual core languages and prominent frameworks/libraries used (e.g. ["Python", "FastAPI", "React", "TypeScript"]).
+4. "highlights": A list of 2-3 professional, bullet-point highlights of the technical accomplishments, features, or architectural decisions in the project (e.g. "Designed a high-throughput queue using Redis", "Built responsive UI utilizing CSS variables").
+
+Your response must be a single, valid JSON object matching this schema:
+{
+    "summary": "string",
+    "tags": ["string"],
+    "languages": ["string"],
+    "highlights": ["string"]
+}

@@ -1,0 +1,11 @@
+Optimize the following resume bullet point. If the original lacks metrics or specific details, make realistic/plausible assumptions or provide placeholders like "[metric]%" but prefer general action/outcome structure.
+
+Original Bullet: "{{ raw_bullet }}"
+Role/Industry Context: {{ context or "Not provided" }}
+
+Your response must be a single, valid JSON object matching this schema:
+{
+    "original": "string",
+    "optimized": "string",
+    "explanation": "string"
+}

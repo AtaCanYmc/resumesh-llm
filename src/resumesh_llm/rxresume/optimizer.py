@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 from resumesh_llm.core.client import LLMClient
 from resumesh_llm.core.models import LLMRequest
+from resumesh_llm.core.prompt_loader import PromptLoader
 
 
 class BulletPointOptimizationResult(BaseModel):
@@ -73,25 +74,16 @@ class CVOptimizer:
         Returns:
             BulletPointOptimizationResult with optimized text and explanation.
         """
-        system_instruction = (
-            "You are a professional resume writer specializing in the tech industry. "
-            "Your job is to rewrite raw experience bullets using the XYZ formula: "
-            "Accomplished [X] (the outcome) as measured by [Y] (quantifiable metrics/data), by doing [Z] (the actions/skills utilized)."
+        system_instruction = PromptLoader.load_and_render(
+            domain="rxresume", template_name="optimize_bullet_system"
         )
 
-        prompt = f"""
-Optimize the following resume bullet point. If the original lacks metrics or specific details, make realistic/plausible assumptions or provide placeholders like "[metric]%" but prefer general action/outcome structure.
-
-Original Bullet: "{raw_bullet}"
-Role/Industry Context: {context or "Not provided"}
-
-Your response must be a single, valid JSON object matching this schema:
-{{
-    "original": "string",
-    "optimized": "string",
-    "explanation": "string"
-}}
-"""
+        prompt = PromptLoader.load_and_render(
+            domain="rxresume",
+            template_name="optimize_bullet_user",
+            raw_bullet=raw_bullet,
+            context=context,
+        )
 
         request = LLMRequest(
             prompt=prompt,
@@ -100,6 +92,7 @@ Your response must be a single, valid JSON object matching this schema:
             response_format="json_object",
         )
 
+        # Generate response using LLMClient
         response = await self.client.generate(request)
 
         try:
@@ -125,28 +118,13 @@ Your response must be a single, valid JSON object matching this schema:
         Returns:
             SkillExtractionResult containing categorized lists of skills.
         """
-        system_instruction = "You are an AI recruiter. Your task is to extract and categorize skills from the provided text."
+        system_instruction = PromptLoader.load_and_render(
+            domain="rxresume", template_name="extract_skills_system"
+        )
 
-        prompt = f"""
-Analyze the following text and extract all professional skills, tools, and platforms mentioned or strongly implied.
-
-Text:
----
-{text}
----
-
-Categorize them into:
-1. "hard_skills": Languages, frameworks, core software engineering practices, databases, methodologies (e.g., Python, SQL, REST APIs, TDD).
-2. "soft_skills": Interpersonal, leadership, or execution attributes (e.g., Team Management, Agile, Public Speaking).
-3. "tools_and_platforms": Specific software tools, cloud providers, or platforms (e.g., AWS, Git, Docker, Kubernetes, Jira).
-
-Your response must be a single, valid JSON object matching this schema:
-{{
-    "hard_skills": ["string"],
-    "soft_skills": ["string"],
-    "tools_and_platforms": ["string"]
-}}
-"""
+        prompt = PromptLoader.load_and_render(
+            domain="rxresume", template_name="extract_skills_user", text=text
+        )
 
         request = LLMRequest(
             prompt=prompt,
@@ -181,38 +159,16 @@ Your response must be a single, valid JSON object matching this schema:
         Returns:
             JobAlignmentResult.
         """
-        system_instruction = (
-            "You are an ATS (Applicant Tracking System) optimizer and career consultant. "
-            "Analyze CV alignment against a Job Description to evaluate matches and provide improvements."
+        system_instruction = PromptLoader.load_and_render(
+            domain="rxresume", template_name="analyze_alignment_system"
         )
 
-        prompt = f"""
-Compare the candidate's CV/Resume text against the Job Description.
-
-CV/Resume Content:
----
-{cv_text}
----
-
-Job Description:
----
-{job_description}
----
-
-Evaluate the alignment and generate a JSON object with:
-1. "match_score": An integer between 0 and 100 based on keyword overlap, level of experience match, and technical alignment.
-2. "missing_skills": Top skills, libraries, technologies, or keywords required in the job description that are not mentioned in the CV.
-3. "matching_skills": Technologies or skills mentioned in both documents.
-4. "suggestions": Concise, actionable bullets advising the candidate on how to rewrite or re-highlight sections to better fit the role.
-
-Your response must be a single, valid JSON object matching this schema:
-{{
-    "match_score": 75,
-    "missing_skills": ["string"],
-    "matching_skills": ["string"],
-    "suggestions": ["string"]
-}}
-"""
+        prompt = PromptLoader.load_and_render(
+            domain="rxresume",
+            template_name="analyze_alignment_user",
+            cv_text=cv_text,
+            job_description=job_description,
+        )
 
         request = LLMRequest(
             prompt=prompt,
