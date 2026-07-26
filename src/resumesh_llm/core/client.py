@@ -54,6 +54,15 @@ class MockClient(LLMClient):
                     "improvements": ["Enhanced unit testing metrics", "Refactored codebase to SOLID principles"],
                     "skills": ["Python", "FastAPI", "Docker"],
                     "score": 85,
+                    "original": "Wrote some unit tests",
+                    "optimized": "Designed and executed a robust test suite, achieving 95% branch coverage.",
+                    "explanation": "Added actionable metrics and impact to emphasize software quality.",
+                    "hard_skills": ["Python", "FastAPI", "PostgreSQL"],
+                    "soft_skills": ["Leadership", "Agile Execution"],
+                    "tools_and_platforms": ["Docker", "AWS", "Git"],
+                    "match_score": 85,
+                    "matching_skills": ["Python", "FastAPI"],
+                    "missing_skills": ["Kubernetes", "GraphQL"],
                     "suggestions": ["Add more direct impact metrics to your experience bullets."]
                 })
             else:
