@@ -166,3 +166,33 @@ Continuous Integration is configured via **GitHub Actions** in [.github/workflow
 - **Linting & Formatting Checks**: Runs `black` to check code formatting and `ruff` to ensure compliance with styling guidelines.
 - **Automated Tests**: Executes the complete unit test suite automatically.
 
+---
+
+## Releasing & Versioning
+
+This library automates its release management and semantic versioning using Google's **release-please**. 
+
+### How it Works
+1. When you push commits to the `main` or `master` branch, a GitHub Action runs `release-please`.
+2. Based on your **Conventional Commits** messages, `release-please` will automatically generate or update a Release Pull Request (updating `pyproject.toml` version, `CHANGELOG.md`, etc.).
+3. Merging the release PR tags the repository with the new semantic version (e.g., `v0.2.0`) and publishes a GitHub Release.
+
+### Conventional Commits Guidelines
+To trigger version bumps correctly, structure your commit messages as follows:
+- **Major release bump** (breaking changes):
+  ```text
+  feat!: refactored core client structures
+  
+  BREAKING CHANGE: The client constructor now requires API keys directly instead of config objects.
+  ```
+- **Minor release bump** (new features):
+  ```text
+  feat: added support for Claude models
+  ```
+- **Patch release bump** (bug fixes, improvements, tests, docs):
+  ```text
+  fix: handled Ollama request timeouts gracefully
+  docs: updated client factory usage guide
+  ```
+
+

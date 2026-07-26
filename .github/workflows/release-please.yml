@@ -1,0 +1,42 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Release Please
+        id: release
+        uses: google-github-actions/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      # The following steps are placeholders/templates showing how to publish the package to PyPI on release
+      - name: Checkout Code (On Release)
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v4
+
+      - name: Set up Python (On Release)
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build & Publish Package (Placeholder)
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          echo "Package release triggered for version ${{ steps.release.outputs.version }}"
+          # In a real environment, you would build and publish to PyPI:
+          # pip install build twine
+          # python -m build
+          # twine upload dist/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
