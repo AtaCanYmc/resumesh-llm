@@ -11,7 +11,7 @@ A lightweight, production-ready Python library implementing the LLM integration 
 - **Multi-Provider LLM Clients**: Unified interface supporting OpenAI, Groq, local Ollama servers, and a built-in Mock provider (for CI/CD and offline development).
 - **SOLID Architecture**: Low coupling, high cohesion, dependency inversion via abstract interfaces, and single responsibility separation.
 - **GitHub Repository Analysis**: Extracts raw metadata and README descriptions to generate resume-ready summaries, technical tag keywords, and developer highlights.
-- **CV/Resume Optimization**: 
+- **CV/Resume Optimization**:
   - **Bullet Point Optimizer**: Refactors bullet points based on the Google XYZ formula: *Accomplished [X] as measured by [Y], by doing [Z]*.
   - **Skill Extractor**: Automatically parses hard, soft, and tool/platform skills from text.
   - **ATS Alignment Matcher**: Matches resume contents with job descriptions, offering detailed keyword overlap scores and improvement suggestions.
@@ -138,7 +138,7 @@ async def main():
 
     raw_bullet = "I worked on fixing bugs and writing tests"
     result = await optimizer.optimize_bullet_point(raw_bullet, context="Backend Developer")
-    
+
     print("Original:", result.original)
     print("Optimized:", result.optimized)
     print("Reasoning:", result.explanation)
@@ -170,7 +170,7 @@ Continuous Integration is configured via **GitHub Actions** in [.github/workflow
 
 ## Releasing & Versioning
 
-This library automates its release management and semantic versioning using Google's **release-please**. 
+This library automates its release management and semantic versioning using Google's **release-please**.
 
 ### How it Works
 1. When you push commits to the `main` or `master` branch, a GitHub Action runs `release-please`.
@@ -182,7 +182,7 @@ To trigger version bumps correctly, structure your commit messages as follows:
 - **Major release bump** (breaking changes):
   ```text
   feat!: refactored core client structures
-  
+
   BREAKING CHANGE: The client constructor now requires API keys directly instead of config objects.
   ```
 - **Minor release bump** (new features):
@@ -194,5 +194,3 @@ To trigger version bumps correctly, structure your commit messages as follows:
   fix: handled Ollama request timeouts gracefully
   docs: updated client factory usage guide
   ```
-
-

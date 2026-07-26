@@ -38,10 +38,10 @@ from resumesh_llm import MockClient, CVOptimizer
 async def test_my_service():
     # Instantiate MockClient
     client = MockClient(model_name="mock-model")
-    
+
     # Inject it into service
     optimizer = CVOptimizer(client=client)
-    
+
     # Run assertions
     result = await optimizer.optimize_bullet_point("wrote tests")
     assert result.original == "wrote tests"

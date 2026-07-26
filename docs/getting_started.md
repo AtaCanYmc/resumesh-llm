@@ -41,7 +41,7 @@ async def run_openai():
         api_key="sk-your-openai-api-key",
         model="gpt-4o"
     )
-    
+
     resp = await client.generate(LLMRequest(prompt="Hello, who are you?"))
     print(resp.text)
 
@@ -58,7 +58,7 @@ async def run_groq():
         api_key="gsk-your-groq-api-key",
         model="llama-3.3-70b-versatile"
     )
-    
+
     resp = await client.generate(LLMRequest(prompt="Summarize the concept of recursion."))
     print(resp.text)
 ```
@@ -73,7 +73,7 @@ async def run_ollama():
         base_url="http://localhost:11434",
         model="llama3"
     )
-    
+
     resp = await client.generate(LLMRequest(prompt="What is a binary search tree?"))
     print(resp.text)
 ```

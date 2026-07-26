@@ -13,10 +13,10 @@ graph TD
     LLMClient -->|Inherited By| GroqClient[GroqClient]
     LLMClient -->|Inherited By| OllamaClient[OllamaClient]
     LLMClient -->|Inherited By| MockClient[MockClient]
-    
+
     GitHubSummarizer[GitHubSummarizer] -->|Depends On| LLMClient
     CVOptimizer[CVOptimizer] -->|Depends On| LLMClient
-    
+
     LLMRequest[LLMRequest Schema] -->|Input parameter| LLMClient
     LLMClient -->|Returns| LLMResponse[LLMResponse Schema]
 ```

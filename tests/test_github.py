@@ -1,5 +1,4 @@
 import pytest
-
 from resumesh_llm.core.client import MockClient
 from resumesh_llm.github.summarizer import GitHubRepoInput, GitHubSummarizer
 

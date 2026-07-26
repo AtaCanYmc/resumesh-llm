@@ -1,5 +1,4 @@
 import pytest
-
 from resumesh_llm.core.client import MockClient, OpenAIClient
 from resumesh_llm.core.exceptions import ConfigurationError
 from resumesh_llm.core.factory import LLMClientFactory
