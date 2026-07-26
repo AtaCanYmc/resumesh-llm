@@ -82,3 +82,6 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # Unused imports in __init__.py are okay
+
+[tool.ruff.lint.isort]
+known-first-party = ["resumesh_llm"]
