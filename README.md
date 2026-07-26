@@ -1,5 +1,7 @@
 # resumesh-llm
 
+[![CI Pipeline](https://github.com/AtaCanYmc/resumesh-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/resumesh-llm/actions/workflows/ci.yml)
+
 A lightweight, production-ready Python library implementing the LLM integration features for the **ResuMesh** CV and portfolio builder. Designed following **KISS** (Keep It Simple, Stupid) and **SOLID** principles, `resumesh-llm` provides robust, schema-validated, and providers-agnostic abstractions to summarize projects and optimize resumes.
 
 ---
@@ -147,10 +149,20 @@ asyncio.run(main())
 
 ---
 
-## Testing
+## Testing & CI/CD
 
-Run tests using `pytest`:
+### Local Testing
+Run tests using `pytest` (which uses `pytest-asyncio` for async tests and mocks all API requests):
 
 ```bash
-pytest
+# Explicitly set pythonpath to src and run pytest
+PYTHONPATH=src pytest
 ```
+
+### CI/CD Pipeline
+Continuous Integration is configured via **GitHub Actions** in [.github/workflows/ci.yml](file:///.github/workflows/ci.yml):
+- **Triggers**: Executes on pull requests and pushes to `main`, `master`, and `develop` branches.
+- **Python Matrix**: Tests on Python `3.10`, `3.11`, and `3.12`.
+- **Linting & Formatting Checks**: Runs `black` to check code formatting and `ruff` to ensure compliance with styling guidelines.
+- **Automated Tests**: Executes the complete unit test suite automatically.
+
