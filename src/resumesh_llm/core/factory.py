@@ -1,6 +1,11 @@
-from typing import Optional
 
-from resumesh_llm.core.client import LLMClient, OpenAIClient, GroqClient, OllamaClient, MockClient
+from resumesh_llm.core.client import (
+    GroqClient,
+    LLMClient,
+    MockClient,
+    OllamaClient,
+    OpenAIClient,
+)
 from resumesh_llm.core.exceptions import ConfigurationError
 
 
@@ -10,10 +15,10 @@ class LLMClientFactory:
     @staticmethod
     def get_client(
         provider: str,
-        api_key: Optional[str] = None,
-        model: Optional[str] = None,
-        base_url: Optional[str] = None,
-        **kwargs
+        api_key: str | None = None,
+        model: str | None = None,
+        base_url: str | None = None,
+        **kwargs,
     ) -> LLMClient:
         """Creates and returns an instance of an LLMClient.
 
@@ -36,7 +41,9 @@ class LLMClientFactory:
             model_name = model or "gpt-4o"
             if not api_key:
                 raise ConfigurationError("api_key is required for 'openai' provider.")
-            return OpenAIClient(api_key=api_key, model_name=model_name, base_url=base_url)
+            return OpenAIClient(
+                api_key=api_key, model_name=model_name, base_url=base_url
+            )
 
         elif provider_clean == "groq":
             model_name = model or "llama-3.3-70b-versatile"

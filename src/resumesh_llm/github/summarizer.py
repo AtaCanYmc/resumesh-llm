@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 from resumesh_llm.core.client import LLMClient
@@ -8,20 +8,36 @@ from resumesh_llm.core.models import LLMRequest
 
 class GitHubRepoInput(BaseModel):
     """Input payload representing a GitHub repository's raw data."""
+
     repo_name: str = Field(description="Name of the repository")
-    description: Optional[str] = Field(default=None, description="Original description on GitHub")
-    readme_content: Optional[str] = Field(default=None, description="Partial or full content of the README.md")
-    languages: List[str] = Field(default_factory=list, description="Primary programming languages detected")
+    description: str | None = Field(
+        default=None, description="Original description on GitHub"
+    )
+    readme_content: str | None = Field(
+        default=None, description="Partial or full content of the README.md"
+    )
+    languages: list[str] = Field(
+        default_factory=list, description="Primary programming languages detected"
+    )
     stars: int = Field(default=0, description="Number of repository stargazers")
     forks: int = Field(default=0, description="Number of repository forks")
 
 
 class GitHubRepoSummary(BaseModel):
     """Structured summary output for a GitHub repository."""
-    summary: str = Field(description="Professional, impact-driven description of the project suitable for a resume")
-    tags: List[str] = Field(description="Refined and professional tags/topics describing the project")
-    languages: List[str] = Field(description="Refined list of primary languages and frameworks utilized")
-    highlights: List[str] = Field(description="Bullet points representing key technical accomplishments or features of the project")
+
+    summary: str = Field(
+        description="Professional, impact-driven description of the project suitable for a resume"
+    )
+    tags: list[str] = Field(
+        description="Refined and professional tags/topics describing the project"
+    )
+    languages: list[str] = Field(
+        description="Refined list of primary languages and frameworks utilized"
+    )
+    highlights: list[str] = Field(
+        description="Bullet points representing key technical accomplishments or features of the project"
+    )
 
 
 class GitHubSummarizer:
@@ -35,7 +51,7 @@ class GitHubSummarizer:
         """
         self.client = client
 
-    def _truncate_readme(self, readme: Optional[str], max_chars: int = 4000) -> str:
+    def _truncate_readme(self, readme: str | None, max_chars: int = 4000) -> str:
         """Helper to truncate readme content to prevent context window overflow."""
         if not readme:
             return ""
@@ -53,7 +69,7 @@ class GitHubSummarizer:
             GitHubRepoSummary containing professional summary, highlights, and tags.
         """
         truncated_readme = self._truncate_readme(repo.readme_content)
-        
+
         system_instruction = (
             "You are a professional technical writer and resume coach. "
             "Your task is to analyze a developer's GitHub repository and summarize it professionally for their portfolio/resume."
@@ -90,11 +106,11 @@ Your response must be a single, valid JSON object matching this schema:
             prompt=prompt,
             system_instruction=system_instruction,
             temperature=0.3,  # Lower temperature for structure consistency
-            response_format="json_object"
+            response_format="json_object",
         )
 
         response = await self.client.generate(request)
-        
+
         try:
             # Parse response
             data = json.loads(response.text)
@@ -102,14 +118,17 @@ Your response must be a single, valid JSON object matching this schema:
                 summary=data.get("summary", ""),
                 tags=data.get("tags", []),
                 languages=data.get("languages", []),
-                highlights=data.get("highlights", [])
+                highlights=data.get("highlights", []),
             )
-        except (json.JSONDecodeError, TypeError) as e:
+        except (json.JSONDecodeError, TypeError):
             # Fallback parsing or standard structured schema if LLM returned bad format
             # In production, we provide a robust fallback to prevent application crashes
             return GitHubRepoSummary(
-                summary=repo.description or f"A repository named {repo.repo_name} built using {', '.join(repo.languages)}.",
+                summary=repo.description
+                or f"A repository named {repo.repo_name} built using {', '.join(repo.languages)}.",
                 tags=repo.languages,
                 languages=repo.languages,
-                highlights=[f"Developed the {repo.repo_name} project using {', '.join(repo.languages)}."]
+                highlights=[
+                    f"Developed the {repo.repo_name} project using {', '.join(repo.languages)}."
+                ],
             )

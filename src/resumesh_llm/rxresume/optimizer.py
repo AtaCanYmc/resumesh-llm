@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 from resumesh_llm.core.client import LLMClient
@@ -8,24 +8,44 @@ from resumesh_llm.core.models import LLMRequest
 
 class BulletPointOptimizationResult(BaseModel):
     """Result of bullet point optimization."""
+
     original: str = Field(description="The original input bullet point")
-    optimized: str = Field(description="The optimized version using the XYZ formula (Accomplished [X], measured by [Y], by doing [Z])")
+    optimized: str = Field(
+        description="The optimized version using the XYZ formula (Accomplished [X], measured by [Y], by doing [Z])"
+    )
     explanation: str = Field(description="Explanation of what was changed and why")
 
 
 class SkillExtractionResult(BaseModel):
     """Extracted skills categorized."""
-    hard_skills: List[str] = Field(default_factory=list, description="Technical/hard skills (e.g. Python, Docker, React)")
-    soft_skills: List[str] = Field(default_factory=list, description="Soft/methodological skills (e.g. Agile, Leadership, Communication)")
-    tools_and_platforms: List[str] = Field(default_factory=list, description="Tools and cloud platforms (e.g. AWS, Git, Jira)")
+
+    hard_skills: list[str] = Field(
+        default_factory=list,
+        description="Technical/hard skills (e.g. Python, Docker, React)",
+    )
+    soft_skills: list[str] = Field(
+        default_factory=list,
+        description="Soft/methodological skills (e.g. Agile, Leadership, Communication)",
+    )
+    tools_and_platforms: list[str] = Field(
+        default_factory=list,
+        description="Tools and cloud platforms (e.g. AWS, Git, Jira)",
+    )
 
 
 class JobAlignmentResult(BaseModel):
     """Result of analyzing CV alignment with a Job Description."""
+
     match_score: int = Field(description="Match score between 0 and 100")
-    missing_skills: List[str] = Field(description="Important skills or keywords from the job description that are missing from the CV")
-    matching_skills: List[str] = Field(description="Skills that successfully match between the CV and job description")
-    suggestions: List[str] = Field(description="Actionable, clear suggestions on how to improve the CV to align with the job description")
+    missing_skills: list[str] = Field(
+        description="Important skills or keywords from the job description that are missing from the CV"
+    )
+    matching_skills: list[str] = Field(
+        description="Skills that successfully match between the CV and job description"
+    )
+    suggestions: list[str] = Field(
+        description="Actionable, clear suggestions on how to improve the CV to align with the job description"
+    )
 
 
 class CVOptimizer:
@@ -39,7 +59,9 @@ class CVOptimizer:
         """
         self.client = client
 
-    async def optimize_bullet_point(self, raw_bullet: str, context: Optional[str] = None) -> BulletPointOptimizationResult:
+    async def optimize_bullet_point(
+        self, raw_bullet: str, context: str | None = None
+    ) -> BulletPointOptimizationResult:
         """Optimizes a resume work experience bullet point using the Google-pioneered XYZ formula:
 
         "Accomplished [X] as measured by [Y], by doing [Z]"
@@ -75,7 +97,7 @@ Your response must be a single, valid JSON object matching this schema:
             prompt=prompt,
             system_instruction=system_instruction,
             temperature=0.4,
-            response_format="json_object"
+            response_format="json_object",
         )
 
         response = await self.client.generate(request)
@@ -85,13 +107,13 @@ Your response must be a single, valid JSON object matching this schema:
             return BulletPointOptimizationResult(
                 original=raw_bullet,
                 optimized=data.get("optimized", raw_bullet),
-                explanation=data.get("explanation", "")
+                explanation=data.get("explanation", ""),
             )
         except (json.JSONDecodeError, TypeError):
             return BulletPointOptimizationResult(
                 original=raw_bullet,
                 optimized=f"Enhanced experience: {raw_bullet}",
-                explanation="Could not format optimized response properly."
+                explanation="Could not format optimized response properly.",
             )
 
     async def extract_skills(self, text: str) -> SkillExtractionResult:
@@ -103,9 +125,7 @@ Your response must be a single, valid JSON object matching this schema:
         Returns:
             SkillExtractionResult containing categorized lists of skills.
         """
-        system_instruction = (
-            "You are an AI recruiter. Your task is to extract and categorize skills from the provided text."
-        )
+        system_instruction = "You are an AI recruiter. Your task is to extract and categorize skills from the provided text."
 
         prompt = f"""
 Analyze the following text and extract all professional skills, tools, and platforms mentioned or strongly implied.
@@ -132,7 +152,7 @@ Your response must be a single, valid JSON object matching this schema:
             prompt=prompt,
             system_instruction=system_instruction,
             temperature=0.2,
-            response_format="json_object"
+            response_format="json_object",
         )
 
         response = await self.client.generate(request)
@@ -142,12 +162,14 @@ Your response must be a single, valid JSON object matching this schema:
             return SkillExtractionResult(
                 hard_skills=data.get("hard_skills", []),
                 soft_skills=data.get("soft_skills", []),
-                tools_and_platforms=data.get("tools_and_platforms", [])
+                tools_and_platforms=data.get("tools_and_platforms", []),
             )
         except (json.JSONDecodeError, TypeError):
             return SkillExtractionResult()
 
-    async def analyze_alignment(self, cv_text: str, job_description: str) -> JobAlignmentResult:
+    async def analyze_alignment(
+        self, cv_text: str, job_description: str
+    ) -> JobAlignmentResult:
         """Analyzes a candidate's CV text against a Job Description to compute a match score,
 
         identify missing skills/keywords, and provide tailored improvement recommendations.
@@ -196,7 +218,7 @@ Your response must be a single, valid JSON object matching this schema:
             prompt=prompt,
             system_instruction=system_instruction,
             temperature=0.3,
-            response_format="json_object"
+            response_format="json_object",
         )
 
         response = await self.client.generate(request)
@@ -207,12 +229,12 @@ Your response must be a single, valid JSON object matching this schema:
                 match_score=data.get("match_score", 0),
                 missing_skills=data.get("missing_skills", []),
                 matching_skills=data.get("matching_skills", []),
-                suggestions=data.get("suggestions", [])
+                suggestions=data.get("suggestions", []),
             )
         except (json.JSONDecodeError, TypeError):
             return JobAlignmentResult(
                 match_score=0,
                 missing_skills=[],
                 matching_skills=[],
-                suggestions=["Could not evaluate CV alignment. Please check inputs."]
+                suggestions=["Could not evaluate CV alignment. Please check inputs."],
             )

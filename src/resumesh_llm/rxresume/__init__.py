@@ -1,4 +1,9 @@
-from resumesh_llm.rxresume.optimizer import CVOptimizer, BulletPointOptimizationResult, SkillExtractionResult, JobAlignmentResult
+from resumesh_llm.rxresume.optimizer import (
+    BulletPointOptimizationResult,
+    CVOptimizer,
+    JobAlignmentResult,
+    SkillExtractionResult,
+)
 
 __all__ = [
     "CVOptimizer",
