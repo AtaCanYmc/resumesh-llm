@@ -163,7 +163,7 @@ PYTHONPATH=src pytest
 Continuous Integration is configured via **GitHub Actions** in [.github/workflows/ci.yml](file:///.github/workflows/ci.yml):
 - **Triggers**: Executes on pull requests and pushes to `main`, `master`, and `develop` branches.
 - **Python Matrix**: Tests on Python `3.10`, `3.11`, and `3.12`.
-- **Linting & Formatting Checks**: Runs `black` to check code formatting and `ruff` to ensure compliance with styling guidelines.
+- **Linting & Formatting Checks**: Runs `ruff format` to check code formatting and `ruff check` to ensure compliance with styling guidelines.
 - **Automated Tests**: Executes the complete unit test suite automatically.
 
 ---
