@@ -1,83 +1,75 @@
 # resumesh-llm
 
-[![CI Pipeline](https://github.com/AtaCanYmc/resumesh-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/AtaCanYmc/resumesh-llm/actions/workflows/ci.yml)
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-blue?style=for-the-badge&logo=python" alt="Python Versions" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License MIT" />
+  <img src="https://img.shields.io/badge/Ruff-Compliant-black?style=for-the-badge" alt="Ruff Compliant" />
+  <img src="https://img.shields.io/badge/Release--Please-Enabled-orange?style=for-the-badge" alt="Release-Please Enabled" />
+</p>
 
-A lightweight, production-ready Python library implementing the LLM integration features for the **ResuMesh** CV and portfolio builder. Designed following **KISS** (Keep It Simple, Stupid) and **SOLID** principles, `resumesh-llm` provides robust, schema-validated, and providers-agnostic abstractions to summarize projects and optimize resumes.
-
----
-
-## Features
-
-- **Multi-Provider LLM Clients**: Unified interface supporting OpenAI, Groq, local Ollama servers, and a built-in Mock provider (for CI/CD and offline development).
-- **SOLID Architecture**: Low coupling, high cohesion, dependency inversion via abstract interfaces, and single responsibility separation.
-- **GitHub Repository Analysis**: Extracts raw metadata and README descriptions to generate resume-ready summaries, technical tag keywords, and developer highlights.
-- **CV/Resume Optimization**:
-  - **Bullet Point Optimizer**: Refactors bullet points based on the Google XYZ formula: *Accomplished [X] as measured by [Y], by doing [Z]*.
-  - **Skill Extractor**: Automatically parses hard, soft, and tool/platform skills from text.
-  - **ATS Alignment Matcher**: Matches resume contents with job descriptions, offering detailed keyword overlap scores and improvement suggestions.
+A professional-grade, lightweight, and production-ready Python library powering the intelligent LLM features of the **ResuMesh** CV and portfolio builder. Architected strictly on **SOLID** and **Domain-Driven Design (DDD)** principles, it provides robust, schema-validated, and provider-agnostic abstractions to analyze repositories, optimize resume metrics, and build active career journals.
 
 ---
 
-## Directory Layout
+## 🌟 Key Capabilities
+
+*   **Advanced Agentic Workflows**: Introduces a graph-based state machine (`StateGraph`) orchestration layer to support deterministic, fault-tolerant critique-and-refinement loops for bullet points.
+*   **Resilient API Clients**: Engineered with exponential backoff retries and randomized jitter to handle rate limits (`429` errors) and network instability smoothly.
+*   **Standardized Schema Output**: Supports exporting optimized data mapping directly to the industry-standard, open-source **JSON Resume Schema**.
+*   **Multi-Provider Support**: Out-of-the-box support for OpenAI, Groq, local Ollama, and an offline Mock client for testing.
+
+---
+
+## 🛠️ Architecture Overview
+
+Designed to prevent circular imports and keep dependencies clean, the library is partitioned into distinct subdomains using the **Facade Pattern** to export clean entry points:
 
 ```text
 resumesh-llm/
-├── pyproject.toml              # Build backend and dependencies
-├── requirements.txt            # Dev package versions
-├── README.md                   # Documentation
 ├── src/
 │   └── resumesh_llm/
-│       ├── __init__.py         # Package entry points
-│       ├── core/               # LLM abstraction and providers
-│       │   ├── __init__.py
-│       │   ├── exceptions.py   # Standardized errors
-│       │   ├── models.py       # Pydantic schemas (Request / Response)
-│       │   ├── client.py       # Abstract Base Client and concrete classes
-│       │   └── factory.py      # LLMClientFactory instantiation helper
-│       ├── github/             # GitHub analysis logic
-│       │   ├── __init__.py
-│       │   └── summarizer.py   # GitHubSummarizer
-│       └── rxresume/           # Resume optimization logic
-│           ├── __init__.py
-│           └── optimizer.py    # CVOptimizer
-└── tests/                      # Pytest suite
+│       ├── __init__.py         # Global Facade exports
+│       ├── core/               # Base abstractions & engines
+│       │   ├── exceptions.py   # Normalized package errors
+│       │   ├── factory.py      # Dynamic LLMClientFactory instantiation
+│       │   ├── graph.py        # StateGraph state-machine orchestrator
+│       │   ├── agent.py        # Critique-and-refine BulletRefinementAgent
+│       │   ├── prompt_loader.py# Render template loader
+│       │   ├── json_resume.py  # Standard JSON Resume Pydantic models
+│       │   ├── models/         # Single-responsibility data schemas
+│       │   │   ├── generation_usage.py
+│       │   │   ├── llm_request.py
+│       │   │   └── llm_response.py
+│       │   └── clients/        # Resilient LLM provider adapters
+│       │       ├── base.py     # Abstract base LLMClient
+│       │       ├── retry.py    # Exponential backoff decorator
+│       │       ├── mock.py     # Offline development adapter
+│       │       ├── openai.py
+│       │       ├── groq.py
+│       │       └── ollama.py
+│       ├── github/             # GitHub analysis domain
+│       │   └── summarizer.py   # Repository summaries and journal bullets
+│       └── rxresume/           # Resume optimization domain
+│           └── optimizer.py    # Bullet metrics & ATS alignment matcher
 ```
-
----
-
-## Design Principles
-
-### KISS (Keep It Simple, Stupid)
-- Avoids over-engineering. No complex langchain wrappers or heavy agent frameworks.
-- Relies on native SDKs (`openai`) and simple HTTP requests (`httpx`) to call models.
-- Standardized inputs and outputs are validated via basic Pydantic models.
-
-### SOLID
-- **Single Responsibility**: `GitHubSummarizer` does not know how to connect to OpenAI; it only knows how to build repository prompts. `LLMClient` does not know about GitHub structures.
-- **Open/Closed**: Adding a new provider (e.g. Anthropic/Claude) only requires creating a new client class inheriting from `LLMClient`. No modification is needed in the services.
-- **Liskov Substitution**: Any concrete client (e.g. `OllamaClient`, `MockClient`) can be passed wherever `LLMClient` is expected.
-- **Interface Segregation**: Clean, minimal client definitions.
-- **Dependency Inversion**: Services (`GitHubSummarizer`, `CVOptimizer`) depend on the abstract `LLMClient`, not concrete client classes.
 
 ---
 
 ## 🚀 Frictionless 3-Step Quickstart
 
-Go from installation to optimizing your first resume bullet point in under 60 seconds.
+You can go from installation to optimizing your first resume bullet point in under 60 seconds:
 
-### Step 1: Install the library
-Install the package directly from your local clone or repository:
+### Step 1: Install the Library
 ```bash
 pip install -e .
 ```
 
-### Step 2: Set your OpenAI API Key (Optional)
+### Step 2: Set your API Key (Optional)
 ```bash
 export OPENAI_API_KEY="your-api-key-here"
 ```
 
 ### Step 3: Run the Optimizer Snippet
-Create a Python file and run it. The `MockClient` lets you test everything offline instantly:
 ```python
 import asyncio
 from resumesh_llm import LLMClientFactory, CVOptimizer
@@ -103,124 +95,47 @@ asyncio.run(main())
 
 ---
 
-## Usage Examples
+## 🔌 Supported Providers & Settings
 
-### 1. Basic Generation with Factory
-
-```python
-import asyncio
-from resumesh_llm import LLMClientFactory, LLMRequest
-
-async def main():
-    # Instantiate client dynamically via factory
-    client = LLMClientFactory.get_client(
-        provider="openai",
-        api_key="your-openai-api-key",
-        model="gpt-4o"
-    )
-
-    request = LLMRequest(
-        prompt="Tell me the benefit of SOLID principles in 1 sentence.",
-        temperature=0.3
-    )
-
-    response = await client.generate(request)
-    print(f"Generated text: {response.text}")
-    print(f"Tokens Used: {response.usage.total_tokens if response.usage else 'N/A'}")
-
-asyncio.run(main())
-```
-
-### 2. Summarize a GitHub Repository
-
-```python
-from resumesh_llm import LLMClientFactory, GitHubSummarizer, GitHubRepoInput
-
-async def main():
-    client = LLMClientFactory.get_client(provider="mock")
-    summarizer = GitHubSummarizer(client=client)
-
-    repo_input = GitHubRepoInput(
-        repo_name="FastAPI-eCommerce",
-        description="A backend commerce application built with FastAPI, PostgreSQL, and Redis.",
-        readme_content="...",
-        languages=["Python", "SQL"],
-        stars=42
-    )
-
-    result = await summarizer.summarize_repo(repo_input)
-    print("Summary:", result.summary)
-    print("Tags:", result.tags)
-    print("Highlights:", result.highlights)
-
-import asyncio
-asyncio.run(main())
-```
-
-### 3. CV Bullet Point Optimization
-
-```python
-from resumesh_llm import LLMClientFactory, CVOptimizer
-
-async def main():
-    client = LLMClientFactory.get_client(provider="mock")
-    optimizer = CVOptimizer(client=client)
-
-    raw_bullet = "I worked on fixing bugs and writing tests"
-    result = await optimizer.optimize_bullet_point(raw_bullet, context="Backend Developer")
-
-    print("Original:", result.original)
-    print("Optimized:", result.optimized)
-    print("Reasoning:", result.explanation)
-
-import asyncio
-asyncio.run(main())
-```
+| Provider | Factory ID | Default Model | Authentication Key | Extra Parameters |
+| :--- | :--- | :--- | :--- | :--- |
+| **OpenAI** | `"openai"` | `gpt-4o` | `api_key` | `base_url` (optional) |
+| **Groq** | `"groq"` | `llama-3.3-70b-versatile` | `api_key` | - |
+| **Ollama** | `"ollama"` | `llama3` | - | `base_url` (default: `http://localhost:11434`) |
+| **Mock** | `"mock"` | `mock-model` | - | `mock_response` (optional string) |
 
 ---
 
-## Testing & CI/CD
+## 📚 Real-World Usage Patterns
 
-### Local Testing
-Run tests using `pytest` (which uses `pytest-asyncio` for async tests and mocks all API requests):
+We maintain a suite of ready-to-run scripts in the [examples/](file:///Users/atacan/ata-codes/resumesh-llm/examples) folder to help you integrate features:
 
+1.  **[Basic Generation](file:///Users/atacan/ata-codes/resumesh-llm/examples/01_basic_generation.py)**: Querying general chat completions.
+2.  **[Google XYZ Optimizer](file:///Users/atacan/ata-codes/resumesh-llm/examples/02_optimize_bullet.py)**: Enhancing experience bullet points with metrics.
+3.  **[GitHub Ingestion](file:///Users/atacan/ata-codes/resumesh-llm/examples/03_github_journal.py)**: Extracting commit messages to build Career Journal logs.
+4.  **[Self-Reflecting Agent](file:///Users/atacan/ata-codes/resumesh-llm/examples/04_agent_refinement.py)**: Graph-orchestrated critique loop targeting job descriptions.
+5.  **[Standard JSON Resume](file:///Users/atacan/ata-codes/resumesh-llm/examples/05_json_resume.py)**: Validating and exporting data schemas.
+
+---
+
+## 🧪 Testing & Linting
+
+### Unit Testing
+Run the complete, mock-supported test suite:
 ```bash
-# Explicitly set pythonpath to src and run pytest
 PYTHONPATH=src pytest
 ```
 
-### CI/CD Pipeline
-Continuous Integration is configured via **GitHub Actions** in [.github/workflows/ci.yml](file:///.github/workflows/ci.yml):
-- **Triggers**: Executes on pull requests and pushes to `main`, `master`, and `develop` branches.
-- **Python Matrix**: Tests on Python `3.10`, `3.11`, and `3.12`.
-- **Linting & Formatting Checks**: Runs `ruff format` to check code formatting and `ruff check` to ensure compliance with styling guidelines.
-- **Automated Tests**: Executes the complete unit test suite automatically.
+### Pre-Commit Hooks
+Run formatting and styling verification hooks:
+```bash
+pre-commit run --all-files
+```
 
 ---
 
-## Releasing & Versioning
-
-This library automates its release management and semantic versioning using Google's **release-please**.
-
-### How it Works
-1. When you push commits to the `main` or `master` branch, a GitHub Action runs `release-please`.
-2. Based on your **Conventional Commits** messages, `release-please` will automatically generate or update a Release Pull Request (updating `pyproject.toml` version, `CHANGELOG.md`, etc.).
-3. Merging the release PR tags the repository with the new semantic version (e.g., `v0.2.0`) and publishes a GitHub Release.
-
-### Conventional Commits Guidelines
-To trigger version bumps correctly, structure your commit messages as follows:
-- **Major release bump** (breaking changes):
-  ```text
-  feat!: refactored core client structures
-
-  BREAKING CHANGE: The client constructor now requires API keys directly instead of config objects.
-  ```
-- **Minor release bump** (new features):
-  ```text
-  feat: added support for Claude models
-  ```
-- **Patch release bump** (bug fixes, improvements, tests, docs):
-  ```text
-  fix: handled Ollama request timeouts gracefully
-  docs: updated client factory usage guide
-  ```
+## 📦 Releases & Versioning
+Releases are automated via Google's **release-please** based on Conventional Commits. Use the following headers:
+- `feat!:` / `fix!:` for breaking changes (bumps **Major** version).
+- `feat:` for new library capabilities (bumps **Minor** version).
+- `fix:` / `docs:` / `style:` for patches and maintenance (bumps **Patch** version).
