@@ -61,19 +61,49 @@ resumesh-llm/
 
 ---
 
-## Installation
+## 🚀 Frictionless 3-Step Quickstart
 
-To install dependencies locally for development or testing:
+Go from installation to optimizing your first resume bullet point in under 60 seconds.
 
+### Step 1: Install the library
+Install the package directly from your local clone or repository:
 ```bash
-pip install -r requirements.txt
-# Or install in editable mode
 pip install -e .
+```
+
+### Step 2: Set your OpenAI API Key (Optional)
+```bash
+export OPENAI_API_KEY="your-api-key-here"
+```
+
+### Step 3: Run the Optimizer Snippet
+Create a Python file and run it. The `MockClient` lets you test everything offline instantly:
+```python
+import asyncio
+from resumesh_llm import LLMClientFactory, CVOptimizer
+
+async def main():
+    # 1. Instantiate the client (uses MockClient offline by default)
+    client = LLMClientFactory.get_client(provider="mock")
+
+    # 2. Initialize the optimizer
+    optimizer = CVOptimizer(client=client)
+
+    # 3. Optimize a resume bullet point using Google's XYZ formula
+    result = await optimizer.optimize_bullet_point(
+        raw_bullet="I worked on fixing bugs and writing tests",
+        context="Backend Developer"
+    )
+
+    print(f"Original: {result.original}")
+    print(f"Optimized: {result.optimized}")
+
+asyncio.run(main())
 ```
 
 ---
 
-## Quick Start & Usage Examples
+## Usage Examples
 
 ### 1. Basic Generation with Factory
 

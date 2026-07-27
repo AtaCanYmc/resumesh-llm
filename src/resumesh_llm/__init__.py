@@ -1,3 +1,4 @@
+from resumesh_llm.core.agent import BulletRefinementAgent
 from resumesh_llm.core.client import (
     GroqClient,
     LLMClient,
@@ -12,6 +13,15 @@ from resumesh_llm.core.exceptions import (
     RateLimitError,
 )
 from resumesh_llm.core.factory import LLMClientFactory
+from resumesh_llm.core.json_resume import (
+    JSONResume,
+    JSONResumeBasics,
+    JSONResumeCertificate,
+    JSONResumeEducation,
+    JSONResumeProject,
+    JSONResumeSkill,
+    JSONResumeWork,
+)
 from resumesh_llm.core.models import GenerationUsage, LLMRequest, LLMResponse
 from resumesh_llm.core.prompt_loader import PromptLoader
 from resumesh_llm.github.summarizer import (
@@ -48,4 +58,12 @@ __all__ = [
     "BulletPointOptimizationResult",
     "SkillExtractionResult",
     "JobAlignmentResult",
+    "BulletRefinementAgent",
+    "JSONResume",
+    "JSONResumeBasics",
+    "JSONResumeWork",
+    "JSONResumeEducation",
+    "JSONResumeCertificate",
+    "JSONResumeSkill",
+    "JSONResumeProject",
 ]

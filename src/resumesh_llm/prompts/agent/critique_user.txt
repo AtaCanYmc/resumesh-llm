@@ -1,0 +1,21 @@
+Review the following drafted resume bullet points.
+Evaluate them based on:
+1. Do they follow the XYZ formula (Accomplished X, measured by Y, by doing Z)?
+2. Do they include specific, realistic metric assumptions?
+3. (If job description is provided) Do they align well with the target role's key skills?
+
+Drafted Bullet Points:
+{% for bullet in bullets %}
+- {{ bullet }}
+{% endfor %}
+
+{% if job_description %}
+Target Job Description:
+{{ job_description }}
+{% endif %}
+
+Provide your review in this JSON format:
+{
+    "critique": "Detailed critique comments pointing out weaknesses or missing aspects.",
+    "is_satisfactory": true or false
+}

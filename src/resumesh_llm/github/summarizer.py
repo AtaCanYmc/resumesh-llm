@@ -116,3 +116,47 @@ class GitHubSummarizer:
                     f"Developed the {repo.repo_name} project using {', '.join(repo.languages)}."
                 ],
             )
+
+    async def generate_journal_bullets(
+        self, repo_name: str, commits: list[str]
+    ) -> list[str]:
+        """Pulls commit log messages and translates them into polished, outcome-driven resume bullet points using the Google XYZ formula.
+
+        Args:
+            repo_name: Name of the repository.
+            commits: List of raw commit messages.
+
+        Returns:
+            List of polished bullet points.
+        """
+        if not commits:
+            return []
+
+        system_instruction = PromptLoader.load_and_render(
+            domain="github", template_name="journal_system"
+        )
+
+        prompt = PromptLoader.load_and_render(
+            domain="github",
+            template_name="journal_user",
+            repo_name=repo_name,
+            commits=commits,
+        )
+
+        request = LLMRequest(
+            prompt=prompt,
+            system_instruction=system_instruction,
+            temperature=0.4,
+            response_format="json_object",
+        )
+
+        response = await self.client.generate(request)
+
+        try:
+            data = json.loads(response.text)
+            return data.get("bullet_points") or data.get("highlights") or []
+        except (json.JSONDecodeError, TypeError):
+            # Fallback bullet point
+            return [
+                f"Contributed {len(commits)} updates to the {repo_name} repository, focusing on codebase maintenance and feature development."
+            ]

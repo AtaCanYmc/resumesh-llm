@@ -1,4 +1,7 @@
+import asyncio
 import json
+import logging
+import random
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -11,6 +14,50 @@ from resumesh_llm.core.exceptions import (
     RateLimitError,
 )
 from resumesh_llm.core.models import GenerationUsage, LLMRequest, LLMResponse
+
+logger = logging.getLogger(__name__)
+
+
+async def retry_with_backoff(
+    coro_func,
+    *args,
+    retries: int = 3,
+    initial_delay: float = 1.0,
+    backoff_factor: float = 2.0,
+    **kwargs,
+):
+    """Retries an async function with exponential backoff and jitter."""
+    delay = initial_delay
+    for attempt in range(retries + 1):
+        try:
+            return await coro_func(*args, **kwargs)
+        except (RateLimitError, httpx.HTTPStatusError, httpx.RequestError) as e:
+            if attempt == retries:
+                logger.error(f"Failed after {retries} retries: {str(e)}")
+                raise
+
+            sleep_time = delay + random.uniform(0, 0.5 * delay)
+            logger.warning(
+                f"Rate limit or network error. Retrying in {sleep_time:.2f}s... (Attempt {attempt + 1}/{retries})"
+            )
+            await asyncio.sleep(sleep_time)
+            delay *= backoff_factor
+        except APIStatusError as e:
+            if e.status_code == 429:
+                if attempt == retries:
+                    raise RateLimitError(str(e), provider="openai") from e
+                sleep_time = delay + random.uniform(0, 0.5 * delay)
+                logger.warning(
+                    f"API Rate Limit (429) hit. Retrying in {sleep_time:.2f}s... (Attempt {attempt + 1}/{retries})"
+                )
+                await asyncio.sleep(sleep_time)
+                delay *= backoff_factor
+            else:
+                if attempt == retries:
+                    raise
+                sleep_time = delay + random.uniform(0, 0.5 * delay)
+                await asyncio.sleep(sleep_time)
+                delay *= backoff_factor
 
 
 class LLMClient(ABC):
@@ -126,7 +173,11 @@ class OpenAIClient(LLMClient):
             kwargs["response_format"] = {"type": "json_object"}
 
         try:
-            response = await self.client.chat.completions.create(**kwargs)
+
+            async def _call():
+                return await self.client.chat.completions.create(**kwargs)
+
+            response = await retry_with_backoff(_call)
             choice = response.choices[0]
             text = choice.message.content or ""
 
@@ -187,7 +238,11 @@ class GroqClient(LLMClient):
             kwargs["response_format"] = {"type": "json_object"}
 
         try:
-            response = await self.client.chat.completions.create(**kwargs)
+
+            async def _call():
+                return await self.client.chat.completions.create(**kwargs)
+
+            response = await retry_with_backoff(_call)
             choice = response.choices[0]
             text = choice.message.content or ""
 
@@ -251,9 +306,15 @@ class OllamaClient(LLMClient):
 
         async with httpx.AsyncClient(timeout=self.timeout) as http_client:
             try:
-                response = await http_client.post(
-                    f"{self.base_url}/api/chat", json=payload
-                )
+
+                async def _call():
+                    res = await http_client.post(
+                        f"{self.base_url}/api/chat", json=payload
+                    )
+                    res.raise_for_status()
+                    return res
+
+                response = await retry_with_backoff(_call)
 
                 if response.status_code != 200:
                     raise ProviderError(

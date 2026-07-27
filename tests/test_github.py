@@ -25,3 +25,17 @@ async def test_github_summarizer():
     assert "FastAPI" in summary_result.languages or "Python" in summary_result.languages
     assert len(summary_result.tags) > 0
     assert len(summary_result.highlights) > 0
+
+
+@pytest.mark.asyncio
+async def test_generate_journal_bullets():
+    client = MockClient()
+    summarizer = GitHubSummarizer(client=client)
+
+    bullets = await summarizer.generate_journal_bullets(
+        repo_name="AwesomeProject",
+        commits=["feat: added endpoints", "fix: corrected schemas"],
+    )
+
+    assert len(bullets) > 0
+    assert any("test" in b or "Designed" in b for b in bullets)
