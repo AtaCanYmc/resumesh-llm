@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.4.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.3.0...resumesh-llm-v0.4.0) (2026-07-27)
+
+
+### Features
+
+* Add advanced RAG checkpointing with custom LLM client and router agent for enhanced resume optimization ([47daa7d](https://github.com/AtaCanYmc/resumesh-llm/commit/47daa7d9665ccaa4fe8a667717881b563be7ef5c))
+* Add asynchronous structured output generation method to LLM clients ([1d7b813](https://github.com/AtaCanYmc/resumesh-llm/commit/1d7b813153dc0e75adce428381c207e6b6460d56))
+* Add dynamic gap analysis example and enhance commit model representation in GitHub journal ([af85e83](https://github.com/AtaCanYmc/resumesh-llm/commit/af85e833681fd0a0884193e57963d2f81086ad4f))
+* Enhance CV alignment analysis with structured input support and add journal bullet generation from GitHub commits ([2fb1925](https://github.com/AtaCanYmc/resumesh-llm/commit/2fb192502ab2ffbfba7bad7495fd4aad4c0cc954))
+* Implement asynchronous RAG pipeline and router agent for resume optimization workflow ([a7a4630](https://github.com/AtaCanYmc/resumesh-llm/commit/a7a4630045eae527c7c598718bb5091ee8180166))
+* Refactor models and summarizer imports; add CV generation and LinkedIn PDF parsing utilities ([5d9c3fc](https://github.com/AtaCanYmc/resumesh-llm/commit/5d9c3fc8e93b0403ce9d7e54af093892b422c2e8))
+
 ## [0.3.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.2.0...resumesh-llm-v0.3.0) (2026-07-27)
 
 
