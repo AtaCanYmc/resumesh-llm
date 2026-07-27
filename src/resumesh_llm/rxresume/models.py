@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BulletPointOptimizationResult(BaseModel):
     """Result of bullet point optimization."""
+
+    model_config = ConfigDict(strict=True)
 
     original: str = Field(description="The original input bullet point")
     optimized: str = Field(
@@ -13,6 +15,8 @@ class BulletPointOptimizationResult(BaseModel):
 
 class SkillExtractionResult(BaseModel):
     """Extracted skills categorized."""
+
+    model_config = ConfigDict(strict=True)
 
     hard_skills: list[str] = Field(
         default_factory=list,
@@ -30,6 +34,8 @@ class SkillExtractionResult(BaseModel):
 
 class JobAlignmentResult(BaseModel):
     """Result of analyzing CV alignment with a Job Description."""
+
+    model_config = ConfigDict(strict=True)
 
     match_score: int = Field(description="Match score between 0 and 100")
     missing_skills: list[str] = Field(

@@ -19,11 +19,21 @@ async def retry_with_backoff(
     **kwargs,
 ):
     """Retries an async function with exponential backoff and jitter."""
+    import json
+
+    from pydantic import ValidationError
+
     delay = initial_delay
     for attempt in range(retries + 1):
         try:
             return await coro_func(*args, **kwargs)
-        except (RateLimitError, httpx.HTTPStatusError, httpx.RequestError) as e:
+        except (
+            RateLimitError,
+            httpx.HTTPStatusError,
+            httpx.RequestError,
+            ValidationError,
+            json.JSONDecodeError,
+        ) as e:
             if attempt == retries:
                 logger.error(f"Failed after {retries} retries: {str(e)}")
                 raise

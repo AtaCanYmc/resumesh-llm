@@ -42,3 +42,38 @@ class LLMClient(ABC):
             An instance of response_model containing parsed fields.
         """
         pass
+
+    async def generate_batch(self, requests: list[LLMRequest]) -> list[LLMResponse]:
+        """Asynchronously generates responses for multiple requests concurrently.
+
+        Args:
+            requests: List of LLMRequest objects.
+
+        Returns:
+            List of LLMResponse objects in the same order.
+        """
+        import asyncio
+
+        return list(await asyncio.gather(*(self.generate(req) for req in requests)))
+
+    async def generate_structured_output_batch(
+        self, requests: list[tuple[LLMRequest, type]]
+    ) -> list[Any]:
+        """Asynchronously generates structured outputs for multiple requests concurrently.
+
+        Args:
+            requests: List of tuples containing (LLMRequest, Pydantic model class).
+
+        Returns:
+            List of parsed model instances.
+        """
+        import asyncio
+
+        return list(
+            await asyncio.gather(
+                *(
+                    self.generate_structured_output(req, model)
+                    for req, model in requests
+                )
+            )
+        )

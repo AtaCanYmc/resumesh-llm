@@ -80,36 +80,40 @@ class OpenAIClient(LLMClient):
     async def generate_structured_output(
         self, request: LLMRequest, response_model: type
     ) -> Any:
-        messages = []
-        if request.system_instruction:
-            messages.append({"role": "system", "content": request.system_instruction})
-        messages.append({"role": "user", "content": request.prompt})
+        from resumesh_llm.core.clients.parser import OutputParser
 
-        try:
-            # Using Beta's chat completions parse if available, otherwise falling back
-            if hasattr(self.client.beta.chat.completions, "parse"):
+        async def _call_and_parse():
+            messages = []
+            if request.system_instruction:
+                messages.append(
+                    {"role": "system", "content": request.system_instruction}
+                )
+            messages.append({"role": "user", "content": request.prompt})
 
-                async def _call():
-                    return await self.client.beta.chat.completions.parse(
+            try:
+                if hasattr(self.client.beta.chat.completions, "parse"):
+                    response = await self.client.beta.chat.completions.parse(
                         model=self.model_name,
                         messages=messages,
                         response_format=response_model,
                         temperature=request.temperature,
                     )
+                    parsed_val = response.choices[0].message.parsed
+                    if parsed_val is None:
+                        raw_text = response.choices[0].message.content or ""
+                        return OutputParser.parse_and_validate(raw_text, response_model)
+                    return parsed_val
+                else:
+                    request.response_format = "json_object"
+                    res = await self.generate(request)
+                    return OutputParser.parse_and_validate(res.text, response_model)
+            except APIStatusError as e:
+                if e.status_code == 429:
+                    raise RateLimitError(str(e), provider="openai") from e
+                raise ProviderError(
+                    str(e), provider="openai", status_code=e.status_code
+                ) from e
+            except APIError as e:
+                raise ProviderError(str(e), provider="openai") from e
 
-                response = await retry_with_backoff(_call)
-                return response.choices[0].message.parsed
-            else:
-                # Fallback to JSON Mode + manual validation
-                request.response_format = "json_object"
-                res = await self.generate(request)
-                return response_model.model_validate_json(res.text)
-
-        except APIStatusError as e:
-            if e.status_code == 429:
-                raise RateLimitError(str(e), provider="openai") from e
-            raise ProviderError(
-                str(e), provider="openai", status_code=e.status_code
-            ) from e
-        except APIError as e:
-            raise ProviderError(str(e), provider="openai") from e
+        return await retry_with_backoff(_call_and_parse)

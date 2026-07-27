@@ -81,6 +81,11 @@ class GroqClient(LLMClient):
     async def generate_structured_output(
         self, request: LLMRequest, response_model: type
     ) -> Any:
-        request.response_format = "json_object"
-        res = await self.generate(request)
-        return response_model.model_validate_json(res.text)
+        from resumesh_llm.core.clients.parser import OutputParser
+
+        async def _call_and_parse():
+            request.response_format = "json_object"
+            res = await self.generate(request)
+            return OutputParser.parse_and_validate(res.text, response_model)
+
+        return await retry_with_backoff(_call_and_parse)

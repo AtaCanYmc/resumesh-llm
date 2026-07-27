@@ -15,11 +15,13 @@ class GitHubCommitModel(BaseModel):
     repo_full_name: str
     html_url: str
 
-    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+    model_config = ConfigDict(extra="ignore", populate_by_name=True, strict=True)
 
 
 class GitHubRepoInput(BaseModel):
     """Input payload representing a GitHub repository's raw data."""
+
+    model_config = ConfigDict(strict=True)
 
     repo_name: str = Field(description="Name of the repository")
     description: str | None = Field(
@@ -37,6 +39,8 @@ class GitHubRepoInput(BaseModel):
 
 class GitHubRepoSummary(BaseModel):
     """Structured summary output for a GitHub repository."""
+
+    model_config = ConfigDict(strict=True)
 
     summary: str = Field(
         description="Professional, impact-driven description of the project suitable for a resume"
