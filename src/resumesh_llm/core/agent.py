@@ -1,18 +1,19 @@
 import json
 import logging
+from typing import Any
 
-from resumesh_llm.core.clients import LLMClient
-from resumesh_llm.core.models import LLMRequest
+from resumesh_llm.core.clients.base import LLMClient
+from resumesh_llm.core.graph import StateGraph
+from resumesh_llm.core.models.llm_request import LLMRequest
 from resumesh_llm.core.prompt_loader import PromptLoader
 
 logger = logging.getLogger(__name__)
 
 
 class BulletRefinementAgent:
-    """An LLM-based agent implementing an iterative Critique-and-Refine self-reflection loop.
+    """An LLM-based agent implementing an iterative Critique-and-Refine self-reflection loop
 
-    Allows optimizing resume bullets or GitHub commit logs, critiquing draft outputs against
-    specific criteria and target job description keywords, and refining them dynamically.
+    using a graph-based state machine architecture (StateGraph) for deterministic routing.
     """
 
     def __init__(self, client: LLMClient):
@@ -24,7 +25,7 @@ class BulletRefinementAgent:
         job_description: str | None = None,
         max_iterations: int = 2,
     ) -> list[str]:
-        """Runs the iterative agentic self-reflection loop on resume bullets.
+        """Runs the iterative agentic self-reflection loop using StateGraph orchestration.
 
         Args:
             drafts: Initial list of resume bullet points.
@@ -34,20 +35,18 @@ class BulletRefinementAgent:
         Returns:
             List of refined bullet points.
         """
-        current_bullets = list(drafts)
+        graph = StateGraph()
 
-        for iteration in range(1, max_iterations + 1):
-            logger.info(f"Agentic loop iteration {iteration}/{max_iterations}")
-
-            # 1. Critique
+        # Define node functions
+        async def critique_node(state: dict[str, Any]) -> dict[str, Any]:
             system_critique = PromptLoader.load_and_render(
                 domain="agent", template_name="critique_system"
             )
             prompt_critique = PromptLoader.load_and_render(
                 domain="agent",
                 template_name="critique_user",
-                bullets=current_bullets,
-                job_description=job_description,
+                bullets=state["bullets"],
+                job_description=state["job_description"],
             )
 
             request = LLMRequest(
@@ -60,35 +59,28 @@ class BulletRefinementAgent:
             try:
                 response = await self.client.generate(request)
                 critique_data = json.loads(response.text)
-
-                is_satisfactory = critique_data.get("is_satisfactory", True)
-                critique_comments = critique_data.get("critique", "")
-
-                logger.debug(
-                    f"Critique: satisfactory={is_satisfactory}, comments={critique_comments}"
-                )
-
-                if is_satisfactory:
-                    logger.info(
-                        "Critique satisfied. Terminating refinement loop early."
-                    )
-                    break
+                return {
+                    "critique": critique_data.get("critique", ""),
+                    "is_satisfactory": critique_data.get("is_satisfactory", True),
+                    "iterations": state["iterations"] + 1,
+                }
             except Exception as e:
-                logger.warning(
-                    f"Failed to generate/parse critique: {str(e)}. Fallback to early exit."
-                )
-                break
+                logger.warning(f"Critique node failure: {str(e)}")
+                return {
+                    "is_satisfactory": True,
+                    "iterations": state["iterations"] + 1,
+                }
 
-            # 2. Refinement
+        async def refine_node(state: dict[str, Any]) -> dict[str, Any]:
             system_refine = PromptLoader.load_and_render(
                 domain="agent", template_name="refine_system"
             )
             prompt_refine = PromptLoader.load_and_render(
                 domain="agent",
                 template_name="refine_user",
-                bullets=current_bullets,
-                critique=critique_comments,
-                job_description=job_description,
+                bullets=state["bullets"],
+                critique=state["critique"],
+                job_description=state["job_description"],
             )
 
             request_refine = LLMRequest(
@@ -107,11 +99,33 @@ class BulletRefinementAgent:
                     or []
                 )
                 if new_bullets:
-                    current_bullets = new_bullets
+                    return {"bullets": new_bullets}
             except Exception as e:
-                logger.warning(
-                    f"Failed to refine bullets in iteration {iteration}: {str(e)}"
-                )
-                break
+                logger.warning(f"Refine node failure: {str(e)}")
+            return {}
 
-        return current_bullets
+        # Define routing function
+        def router(state: dict[str, Any]) -> str:
+            if state["is_satisfactory"] or state["iterations"] >= max_iterations:
+                return "END"
+            return "refine"
+
+        # Register nodes and transitions
+        graph.add_node("critique", critique_node)
+        graph.add_node("refine", refine_node)
+
+        graph.add_conditional_edge("critique", router)
+        graph.add_edge("refine", "critique")
+
+        # Set initial state
+        initial_state = {
+            "bullets": list(drafts),
+            "job_description": job_description,
+            "critique": "",
+            "is_satisfactory": False,
+            "iterations": 0,
+        }
+
+        # Run state machine
+        final_state = await graph.run(initial_state, entry_point="critique")
+        return final_state["bullets"]
