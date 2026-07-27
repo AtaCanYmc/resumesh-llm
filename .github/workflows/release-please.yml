@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  id-token: write
 
 jobs:
   release-please:
@@ -21,7 +22,6 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-      # The following steps are placeholders/templates showing how to publish the package to PyPI on release
       - name: Checkout Code (On Release)
         if: ${{ steps.release.outputs.release_created }}
         uses: actions/checkout@v4
@@ -32,11 +32,18 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Build & Publish Package (Placeholder)
+      - name: Install build tools
         if: ${{ steps.release.outputs.release_created }}
         run: |
-          echo "Package release triggered for version ${{ steps.release.outputs.version }}"
-          # In a real environment, you would build and publish to PyPI:
-          # pip install build twine
-          # python -m build
-          # twine upload dist/* -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+          python -m pip install --upgrade pip
+          pip install build
+
+      - name: Build package distribution
+        if: ${{ steps.release.outputs.release_created }}
+        run: python -m build
+
+      - name: Publish package distributions to PyPI
+        if: ${{ steps.release.outputs.release_created }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
