@@ -1,7 +1,7 @@
 import pytest
 
 from resumesh_llm.core.agent import BulletRefinementAgent
-from resumesh_llm.core.client import MockClient
+from resumesh_llm.core.clients import MockClient
 
 
 @pytest.mark.asyncio

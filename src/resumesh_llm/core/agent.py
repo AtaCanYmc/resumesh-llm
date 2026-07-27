@@ -1,7 +1,7 @@
 import json
 import logging
 
-from resumesh_llm.core.client import LLMClient
+from resumesh_llm.core.clients import LLMClient
 from resumesh_llm.core.models import LLMRequest
 from resumesh_llm.core.prompt_loader import PromptLoader
 

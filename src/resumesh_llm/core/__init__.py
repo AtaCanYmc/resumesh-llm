@@ -1,4 +1,4 @@
-from resumesh_llm.core.client import (
+from resumesh_llm.core.clients import (
     GroqClient,
     LLMClient,
     MockClient,
