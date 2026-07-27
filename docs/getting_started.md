@@ -88,6 +88,30 @@ async def run_mock():
     print(resp.text)
 ```
 
+### 5. Custom Client Registration (Registry Pattern)
+You can register and instantiate your own custom LLM clients without changing the package code:
+
+```python
+from resumesh_llm import LLMClient, LLMClientFactory, LLMRequest, LLMResponse
+
+class CustomEnterpriseClient(LLMClient):
+    def __init__(self, api_key: str, model_name: str = "custom-enterprise"):
+        super().__init__(model_name)
+        self.api_key = api_key
+
+    async def generate(self, request: LLMRequest) -> LLMResponse:
+        return LLMResponse(text="Hello from Custom Client!", usage=None, provider="custom", model=self.model_name)
+
+    async def generate_structured_output(self, request: LLMRequest, response_model: type):
+        pass
+
+# Register the provider
+LLMClientFactory.register_provider("enterprise", CustomEnterpriseClient)
+
+# Use it via factory
+client = LLMClientFactory.get_client(provider="enterprise", api_key="secret-token")
+```
+
 ---
 
 ## Configuration Reference

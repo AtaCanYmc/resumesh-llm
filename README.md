@@ -13,10 +13,11 @@ A professional-grade, lightweight, and production-ready Python library powering 
 
 ## 🌟 Key Capabilities
 
-*   **Advanced Agentic Workflows**: Introduces a graph-based state machine (`StateGraph`) orchestration layer to support deterministic, fault-tolerant critique-and-refinement loops for bullet points.
-*   **Resilient API Clients**: Engineered with exponential backoff retries and randomized jitter to handle rate limits (`429` errors) and network instability smoothly.
+*   **Advanced Agentic Workflows & Checkpointing**: Introduces a graph-based state machine (`StateGraph`) orchestration layer supporting deterministic critique-and-refine loops. Comes with memory/disk state checkpointing (`MemoryCheckpointer` / `FileCheckpointer`) to resume workflows seamlessly.
+*   **Asynchronous RAG & Routing**: Provides an asynchronous keyword RAG retriever (`AsyncRAGPipeline`) and a dynamic routing agent (`RouterAgent`) to match resumes against ATS and compliance guidelines on the fly.
+*   **Resilient API Clients & Strict Validation**: Automatic exponential backoff retries with randomized jitter, integrated with strict Pydantic V2 validation (`OutputParser`) to recover from rate limits and malformed LLM outputs.
 *   **Standardized Schema Output**: Supports exporting optimized data mapping directly to the industry-standard, open-source **JSON Resume Schema**.
-*   **Multi-Provider Support**: Out-of-the-box support for OpenAI, Groq, local Ollama, and an offline Mock client for testing.
+*   **Pluggable Provider Registry**: Built-in support for OpenAI, Groq, Ollama, Mock, and a dynamic registration pattern allowing developers to register and run custom LLM clients.
 
 ---
 
@@ -31,29 +32,51 @@ resumesh-llm/
 │       ├── __init__.py         # Global Facade exports
 │       ├── core/               # Base abstractions & engines
 │       │   ├── exceptions.py   # Normalized package errors
-│       │   ├── factory.py      # Dynamic LLMClientFactory instantiation
-│       │   ├── graph.py        # StateGraph state-machine orchestrator
+│       │   ├── factory.py      # Dynamic LLMClientFactory & Provider Registry
+│       │   ├── graph.py        # StateGraph & state checkpointing
 │       │   ├── agent.py        # Critique-and-refine BulletRefinementAgent
 │       │   ├── prompt_loader.py# Render template loader
 │       │   ├── json_resume.py  # Standard JSON Resume Pydantic models
+│       │   ├── rag.py          # Asynchronous RAG document retriever
+│       │   ├── router.py       # Asynchronous LLM-backed Router Agent
 │       │   ├── models/         # Single-responsibility data schemas
 │       │   │   ├── generation_usage.py
 │       │   │   ├── llm_request.py
 │       │   │   └── llm_response.py
-│       │   └── clients/        # Resilient LLM provider adapters
-│       │       ├── base.py     # Abstract base LLMClient
+│       │   └── clients/        # Resilient LLM provider adapters & parsers
+│       │       ├── base.py     # Abstract base LLMClient (with batch gather)
 │       │       ├── retry.py    # Exponential backoff decorator
+│       │       ├── parser.py   # Strict schema JSON output parser
 │       │       ├── mock.py     # Offline development adapter
 │       │       ├── openai.py
 │       │       ├── groq.py
 │       │       └── ollama.py
 │       ├── github/             # GitHub analysis domain
-│       │   ├── models.py       # Pydantic commit models
+│       │   ├── models.py       # Pydantic commit models (Strict)
 │       │   └── summarizer.py   # Repository summaries and journal bullets
 │       └── rxresume/           # Resume optimization domain
-│           ├── models.py       # Pydantic response models
+│           ├── models.py       # Pydantic response models (Strict)
 │           ├── utils.py        # Resume formatting utilities
 │           └── optimizer.py    # Bullet metrics & ATS alignment matcher
+```
+
+### Agentic Workflow & Checkpoint Pipeline
+
+```mermaid
+graph TD
+    User([Client Application]) -->|Triggers run| StateGraph[StateGraph Orchestrator]
+    StateGraph -->|Loads Checkpoint| Checkpointer[(BaseCheckpointer)]
+    StateGraph -->|Invokes| RouterAgent[RouterAgent]
+    RouterAgent -->|Queries| RAG[AsyncRAGPipeline]
+    RAG -.->|Retrieves Chunks| Regulations[(Regulations & ATS Guidelines)]
+    RouterAgent -->|Decides route| Decision{Routing Decision}
+    Decision -->|ats_optimization| ATSNode[ATS Optimization Node]
+    Decision -->|regulatory_alignment| RegNode[Regulatory Alignment Node]
+    Decision -->|standard_critique| CritiqueNode[Standard Critique Node]
+    ATSNode -->|Updates State| Save[Save Checkpoint]
+    RegNode -->|Updates State| Save
+    CritiqueNode -->|Updates State| Save
+    Save -->|Persists state & pointer| Checkpointer
 ```
 
 ---
@@ -100,6 +123,15 @@ async def run_alignment():
     align_result = await optimizer.analyze_alignment(cv, "React Developer position")
     print(f"Alignment Score: {align_result.match_score}")
 
+async def run_batch():
+    # 5. Execute multiple requests concurrently
+    from resumesh_llm import LLMRequest
+    responses = await client.generate_batch([
+        LLMRequest(prompt="Optimized bullet 1"),
+        LLMRequest(prompt="Optimized bullet 2")
+    ])
+    print(f"Concurrent response counts: {len(responses)}")
+
 asyncio.run(main())
 ```
 
@@ -125,7 +157,8 @@ We maintain a suite of ready-to-run scripts in the [examples/](file:///Users/ata
 3.  **[GitHub Ingestion](file:///Users/atacan/ata-codes/resumesh-llm/examples/03_github_journal.py)**: Extracting commit messages to build Career Journal logs.
 4.  **[Self-Reflecting Agent](file:///Users/atacan/ata-codes/resumesh-llm/examples/04_agent_refinement.py)**: Graph-orchestrated critique loop targeting job descriptions.
 5.  **[Standard JSON Resume](file:///Users/atacan/ata-codes/resumesh-llm/examples/05_json_resume.py)**: Validating and exporting data schemas.
-6.  **[Dynamic Gap Analysis](file:///Users/atacan/ata-codes/resumesh-llm/examples/06_dynamic_gap_analysis.py)**: Performing gamified alignment analysis against a target job description using structured JSONResume models.
+6.  **[Dynamic Gap Analysis](file:///Users/atacan/ata-codes/resumesh-llm/examples/06_dynamic_gap_analysis.py)**: Performing gamified alignment analysis against target job description.
+7.  **[Advanced RAG & Checkpointing](file:///Users/atacan/ata-codes/resumesh-llm/examples/07_advanced_rag_checkpointing.py)**: Demonstrating registry extension, checkpoint state saving, async RAG ingestion, and routing.
 
 ---
 

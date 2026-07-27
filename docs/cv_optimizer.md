@@ -2,6 +2,22 @@
 
 `CVOptimizer` is a specialized service that helps developers improve their CV quality, classify skills, and match their resumes against target job descriptions.
 
+```mermaid
+graph TD
+    Input[Raw Bullet / Text / JSONResume] --> ActionSelector{Optimizer Action}
+    ActionSelector -->|optimize_bullet_point| XYZ[XYZ Formula Formatter]
+    ActionSelector -->|extract_skills| Classifier[Skill Classifier Node]
+    ActionSelector -->|analyze_alignment| Alignment[Job Alignment Matcher]
+
+    XYZ -->|Generates| BulletPointOptimizationResult[BulletPointOptimizationResult]
+    Classifier -->|Categorizes| SkillExtractionResult[SkillExtractionResult]
+    Alignment -->|Formats CV Input| CVFormatter[Format CV to Text]
+    CVFormatter -->|Calculates Score| JobAlignmentResult[JobAlignmentResult]
+
+    classDef result fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
+    class BulletPointOptimizationResult,SkillExtractionResult,JobAlignmentResult result;
+```
+
 ## Features
 
 ### 1. Bullet Point Optimization (Google XYZ Formula)

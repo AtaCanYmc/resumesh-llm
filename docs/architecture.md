@@ -13,28 +13,43 @@ graph TD
     LLMClient -->|Inherited By| GroqClient[GroqClient]
     LLMClient -->|Inherited By| OllamaClient[OllamaClient]
     LLMClient -->|Inherited By| MockClient[MockClient]
+    LLMClient -->|Inherited By| CustomClient[Custom Enterprise Client]
+
+    LLMClientFactory -->|Allows Registration of| CustomClient
 
     GitHubSummarizer[GitHubSummarizer] -->|Depends On| LLMClient
     CVOptimizer[CVOptimizer] -->|Depends On| LLMClient
 
-    LLMRequest[LLMRequest Schema] -->|Input parameter| LLMClient
-    LLMClient -->|Returns| LLMResponse[LLMResponse Schema]
+    StateGraph[StateGraph] -->|Uses| BaseCheckpointer[BaseCheckpointer (Abstract)]
+    StateGraph -->|Uses| RouterAgent[RouterAgent]
+    RouterAgent -->|Queries| AsyncRAGPipeline[AsyncRAGPipeline]
 ```
 
 ## Core Abstractions
 
 ### 1. Abstract Client Class (`LLMClient`)
-- Located in `src/resumesh_llm/core/client.py`.
-- Solves **Dependency Inversion**: High-level modules (`GitHubSummarizer`, `CVOptimizer`) do not depend on concrete implementations like `OpenAIClient`. They only interact via the abstract `LLMClient.generate` interface.
-- Solves **Liskov Substitution**: Any subclass of `LLMClient` conforms to the abstract `generate(request: LLMRequest) -> LLMResponse` contract and can replace any other.
+- Located in `src/resumesh_llm/core/clients/base.py`.
+- Solves **Dependency Inversion**: High-level modules do not depend on concrete implementations like `OpenAIClient`. They only interact via the abstract `LLMClient.generate` and `generate_structured_output` interfaces.
+- Solves **Liskov Substitution**: Any subclass of `LLMClient` conforms to the abstract contracts and can replace any other. Now also supports asynchronous batch operations via `generate_batch` and `generate_structured_output_batch`.
 
-### 2. Client Factory (`LLMClientFactory`)
+### 2. Client Factory & Pluggable Registry (`LLMClientFactory`)
 - Located in `src/resumesh_llm/core/factory.py`.
-- Solves **Single Responsibility**: Consolidates provider selection, endpoint setups, and parameter checking in one helper class.
+- Solves **Single Responsibility**: Consolidates provider selection, credentials mapping, and parameter checking.
+- **Open-Closed Principle**: Supports dynamic provider registry via `register_provider(name, client_class)`, letting developers plug in custom client architectures without modifying library source code.
 
-### 3. Data Schemas
-- Defined using `pydantic` in `src/resumesh_llm/core/models.py`.
-- Respects **Interface Segregation**: Splits inputs (`LLMRequest`) and outputs (`LLMResponse`) cleanly, omitting unnecessary data bloat.
+### 3. Graph Checkpoint Engines (`BaseCheckpointer`)
+- Located in `src/resumesh_llm/core/graph.py`.
+- Enables state machine persistence to save and restore execution status after node completions:
+  - `MemoryCheckpointer`: Volatile memory-backed storage.
+  - `FileCheckpointer`: Disk-based JSON persistence.
+
+### 4. Output Parsing & Strict Validation (`OutputParser`)
+- Located in `src/resumesh_llm/core/clients/parser.py`.
+- Enforces strict Pydantic V2 verification on all responses. If LLMs return invalid schema keys or hallucinate types, `OutputParser` raises exceptions that are caught by `retry_with_backoff` to automatically re-request the prompt.
+
+### 5. Async RAG & Router Agent
+- `AsyncRAGPipeline` (in `core/rag.py`): Ingests and queries job regulations and ATS requirements asynchronously.
+- `RouterAgent` (in `core/router.py`): Examines states against retrieved chunks from the RAG pipeline using LLM reasoning to route workflows.
 
 ---
 
