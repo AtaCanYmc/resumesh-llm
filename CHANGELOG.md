@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.4.0...resumesh-llm-v0.5.0) (2026-07-27)
+
+
+### Features
+
+* Update release workflow to include package build and publish steps for PyPI ([f0efb87](https://github.com/AtaCanYmc/resumesh-llm/commit/f0efb8729e6c0387f1c7bc1e6c35d62341fb2cc9))
+
+
+### Documentation
+
+* Remove outdated engineering deep dives from README ([dccb36d](https://github.com/AtaCanYmc/resumesh-llm/commit/dccb36dd80f7d24928c376e064211123b02e3581))
+* Update README with new features, quickstart guide, and enhanced descriptions ([50caace](https://github.com/AtaCanYmc/resumesh-llm/commit/50caace2a7d6ce41ccf13b2ff9a3a3125009bcc1))
+
 ## [0.4.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.3.0...resumesh-llm-v0.4.0) (2026-07-27)
 
 
