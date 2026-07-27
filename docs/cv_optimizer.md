@@ -39,9 +39,35 @@ Computes alignment metrics between a CV body and a target Job Description. Retur
 - **Output fields**: `hard_skills`, `soft_skills`, `tools_and_platforms`.
 
 ### Job Alignment Analyzer
-- **Method**: `async analyze_alignment(cv_text: str, job_description: str) -> JobAlignmentResult`
+- **Method**: `async analyze_alignment(cv_text: str | dict | JSONResume, job_description: str) -> JobAlignmentResult`
+  - Accepts raw text strings, standard Python dictionaries, or structured `JSONResume` Pydantic models representing your Vite/React frontend resume data.
+  - Automatically parses and formats structured objects into readable text summaries before submitting to the LLM.
 - **Output fields**:
   - `match_score`: integer from `0` to `100`.
   - `matching_skills`: skills found in both.
   - `missing_skills`: skills required by job but missing in CV.
   - `suggestions`: actionable improvements.
+
+### Alignment Example using Structured Input
+
+```python
+import asyncio
+from resumesh_llm import CVOptimizer, LLMClientFactory, JSONResume, JSONResumeBasics, JSONResumeSkill
+
+async def main():
+    client = LLMClientFactory.get_client("mock")
+    optimizer = CVOptimizer(client)
+
+    cv = JSONResume(
+        basics=JSONResumeBasics(name="Bob", label="Vite / React Frontend Developer"),
+        skills=[JSONResumeSkill(name="React", level="Senior", keywords=["Vite", "TypeScript"])]
+    )
+
+    result = await optimizer.analyze_alignment(
+        cv_text=cv,
+        job_description="React developer with Vite and TypeScript expertise"
+    )
+    print(f"Alignment Score: {result.match_score}/100")
+
+asyncio.run(main())
+```

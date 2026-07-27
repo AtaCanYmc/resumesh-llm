@@ -48,8 +48,11 @@ resumesh-llm/
 │       │       ├── groq.py
 │       │       └── ollama.py
 │       ├── github/             # GitHub analysis domain
+│       │   ├── models.py       # Pydantic commit models
 │       │   └── summarizer.py   # Repository summaries and journal bullets
 │       └── rxresume/           # Resume optimization domain
+│           ├── models.py       # Pydantic response models
+│           ├── utils.py        # Resume formatting utilities
 │           └── optimizer.py    # Bullet metrics & ATS alignment matcher
 ```
 
@@ -90,6 +93,13 @@ async def main():
     print(f"Original: {result.original}")
     print(f"Optimized: {result.optimized}")
 
+async def run_alignment():
+    # 4. Perform dynamic gap analysis comparing structured CV data to job description
+    from resumesh_llm import JSONResume, JSONResumeBasics
+    cv = JSONResume(basics=JSONResumeBasics(name="Developer", label="React Developer"))
+    align_result = await optimizer.analyze_alignment(cv, "React Developer position")
+    print(f"Alignment Score: {align_result.match_score}")
+
 asyncio.run(main())
 ```
 
@@ -101,7 +111,7 @@ asyncio.run(main())
 | :--- | :--- | :--- | :--- | :--- |
 | **OpenAI** | `"openai"` | `gpt-4o` | `api_key` | `base_url` (optional) |
 | **Groq** | `"groq"` | `llama-3.3-70b-versatile` | `api_key` | - |
-| **Ollama** | `"ollama"` | `llama3` | - | `base_url` (default: `http://localhost:11434`) |
+| **Ollama** | `"ollama"` | `ollama` | - | `base_url` (default: `http://localhost:11434`) |
 | **Mock** | `"mock"` | `mock-model` | - | `mock_response` (optional string) |
 
 ---
@@ -115,6 +125,7 @@ We maintain a suite of ready-to-run scripts in the [examples/](file:///Users/ata
 3.  **[GitHub Ingestion](file:///Users/atacan/ata-codes/resumesh-llm/examples/03_github_journal.py)**: Extracting commit messages to build Career Journal logs.
 4.  **[Self-Reflecting Agent](file:///Users/atacan/ata-codes/resumesh-llm/examples/04_agent_refinement.py)**: Graph-orchestrated critique loop targeting job descriptions.
 5.  **[Standard JSON Resume](file:///Users/atacan/ata-codes/resumesh-llm/examples/05_json_resume.py)**: Validating and exporting data schemas.
+6.  **[Dynamic Gap Analysis](file:///Users/atacan/ata-codes/resumesh-llm/examples/06_dynamic_gap_analysis.py)**: Performing gamified alignment analysis against a target job description using structured JSONResume models.
 
 ---
 

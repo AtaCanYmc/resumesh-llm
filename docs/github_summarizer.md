@@ -74,5 +74,48 @@ async def main():
     for bullet in result.highlights:
         print(f" - {bullet}")
 
+    # Generate journal bullets from raw scraper commits
+    from resumesh_llm import GitHubCommitModel
+    from datetime import datetime
+    commits = [
+        GitHubCommitModel(
+            sha="c1b2a3",
+            message="feat: added async state graph engine for agents",
+            author_name="Alice",
+            author_email="alice@example.com",
+            date=datetime.now(),
+            repo_name="ResuMesh-Backend",
+            repo_full_name="owner/ResuMesh-Backend",
+            html_url="https://github.com/owner/ResuMesh-Backend/commit/c1b2a3",
+        )
+    ]
+    bullets = await summarizer.generate_journal_bullets("ResuMesh-Backend", commits)
+    print("Journal Bullets:", bullets)
+
 asyncio.run(main())
 ```
+
+---
+
+## Career Journal API Reference
+
+### Input Model (`GitHubCommitModel`)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `sha` | `str` | :white_check_mark: | Commit hash. |
+| `message` | `str` | :white_check_mark: | Commit log message. |
+| `author_name` | `str` | :white_check_mark: | Author display name. |
+| `author_email` | `str` | :white_check_mark: | Author email address. |
+| `date` | `datetime` | :white_check_mark: | Timestamp of the commit. |
+| `repo_name` | `str` | :white_check_mark: | Name of the repository. |
+| `repo_full_name` | `str` | :white_check_mark: | Full name of the repository (owner/name). |
+| `html_url` | `str` | :white_check_mark: | Link to commit on GitHub. |
+
+### Method (`generate_journal_bullets`)
+
+Converts commit logs into XYZ-based resume bullet points.
+- **Parameters**:
+  - `repo_name` (`str`): Repository name.
+  - `commits` (`list[GitHubCommitModel] | list[str]`): Scraped commit objects or raw commit message strings.
+- **Returns**: `list[str]` (polished, outcome-driven resume bullet points).
