@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 from resumesh_llm.core.clients.base import LLMClient
 from resumesh_llm.core.models.generation_usage import GenerationUsage
@@ -62,3 +63,68 @@ class MockClient(LLMClient):
             model=self.model_name,
             raw_response={"status": "success", "mocked": True},
         )
+
+    async def generate_structured_output(
+        self, request: LLMRequest, response_model: type
+    ) -> Any:
+        if response_model.__name__ == "ResumeImportData":
+            try:
+                from reactive_resume.models.resume import Basics, Section, WorkItem
+
+                return response_model(
+                    title="Mocked CV",
+                    basics=Basics(
+                        name="Mock Candidate",
+                        headline="Python Developer",
+                        email="mock@example.com",
+                        phone="123-456-7890",
+                        location="Remote",
+                    ),
+                    sections={
+                        "work": Section(
+                            id="work",
+                            name="Work Experience",
+                            items=[
+                                WorkItem(
+                                    id="mock-w1",
+                                    company="Mock Corp",
+                                    position="Mock Engineer",
+                                    summary="Tailored experience in Python and FastAPI.",
+                                )
+                            ],
+                        )
+                    },
+                )
+            except ImportError:
+                pass
+
+        if response_model.__name__ == "LinkedInProfileDataSchema":
+            try:
+                from app.schemas.certificate import CertificateCreate
+                from app.schemas.experience import ExperienceCreate
+
+                return response_model(
+                    experiences=[
+                        ExperienceCreate(
+                            title="Mock Engineer",
+                            company_name="Mock Corp",
+                            description="Mock experience.",
+                            start_date="2020-01-01",
+                        )
+                    ],
+                    certificates=[
+                        CertificateCreate(
+                            name="Mock Certificate",
+                            issuing_organization="Mock Org",
+                        )
+                    ],
+                )
+            except ImportError:
+                pass
+
+        request.response_format = "json_object"
+        res = await self.generate(request)
+        try:
+            return response_model.model_validate_json(res.text)
+        except Exception:
+            return response_model.model_construct()

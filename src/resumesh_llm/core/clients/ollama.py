@@ -1,3 +1,5 @@
+from typing import Any
+
 import httpx
 
 from resumesh_llm.core.clients.base import LLMClient
@@ -86,3 +88,10 @@ class OllamaClient(LLMClient):
                 raise ProviderError(
                     f"HTTP request to Ollama failed: {str(e)}", provider="ollama"
                 ) from e
+
+    async def generate_structured_output(
+        self, request: LLMRequest, response_model: type
+    ) -> Any:
+        request.response_format = "json_object"
+        res = await self.generate(request)
+        return response_model.model_validate_json(res.text)

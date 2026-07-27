@@ -76,3 +76,40 @@ class OpenAIClient(LLMClient):
             ) from e
         except APIError as e:
             raise ProviderError(str(e), provider="openai") from e
+
+    async def generate_structured_output(
+        self, request: LLMRequest, response_model: type
+    ) -> Any:
+        messages = []
+        if request.system_instruction:
+            messages.append({"role": "system", "content": request.system_instruction})
+        messages.append({"role": "user", "content": request.prompt})
+
+        try:
+            # Using Beta's chat completions parse if available, otherwise falling back
+            if hasattr(self.client.beta.chat.completions, "parse"):
+
+                async def _call():
+                    return await self.client.beta.chat.completions.parse(
+                        model=self.model_name,
+                        messages=messages,
+                        response_format=response_model,
+                        temperature=request.temperature,
+                    )
+
+                response = await retry_with_backoff(_call)
+                return response.choices[0].message.parsed
+            else:
+                # Fallback to JSON Mode + manual validation
+                request.response_format = "json_object"
+                res = await self.generate(request)
+                return response_model.model_validate_json(res.text)
+
+        except APIStatusError as e:
+            if e.status_code == 429:
+                raise RateLimitError(str(e), provider="openai") from e
+            raise ProviderError(
+                str(e), provider="openai", status_code=e.status_code
+            ) from e
+        except APIError as e:
+            raise ProviderError(str(e), provider="openai") from e

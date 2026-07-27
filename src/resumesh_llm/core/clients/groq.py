@@ -77,3 +77,10 @@ class GroqClient(LLMClient):
             ) from e
         except APIError as e:
             raise ProviderError(str(e), provider="groq") from e
+
+    async def generate_structured_output(
+        self, request: LLMRequest, response_model: type
+    ) -> Any:
+        request.response_format = "json_object"
+        res = await self.generate(request)
+        return response_model.model_validate_json(res.text)
