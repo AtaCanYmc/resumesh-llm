@@ -46,3 +46,47 @@ async def test_analyze_alignment():
     assert result.match_score > 0
     assert len(result.missing_skills) > 0
     assert len(result.suggestions) > 0
+
+
+@pytest.mark.asyncio
+async def test_analyze_alignment_structured():
+    from resumesh_llm.core.json_resume import (
+        JSONResume,
+        JSONResumeBasics,
+        JSONResumeSkill,
+        JSONResumeWork,
+    )
+
+    client = MockClient()
+    optimizer = CVOptimizer(client=client)
+
+    cv = JSONResume(
+        basics=JSONResumeBasics(
+            name="Bob Developer", label="Vite React Developer", summary="Frontend Dev"
+        ),
+        skills=[
+            JSONResumeSkill(
+                name="React",
+                level="Senior",
+                keywords=["Vite", "TypeScript", "JavaScript"],
+            ),
+            JSONResumeSkill(name="Python", level="Intermediate", keywords=["FastAPI"]),
+        ],
+        work=[
+            JSONResumeWork(
+                name="Tech Corp",
+                position="Senior Frontend Engineer",
+                summary="Built react apps",
+                highlights=["Created 10+ React microservices"],
+            )
+        ],
+    )
+
+    result = await optimizer.analyze_alignment(
+        cv_text=cv,
+        job_description="Looking for a React developer with TypeScript and Vite experience.",
+    )
+
+    assert result.match_score > 0
+    assert len(result.missing_skills) > 0
+    assert len(result.suggestions) > 0

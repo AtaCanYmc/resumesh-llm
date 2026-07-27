@@ -1,11 +1,13 @@
-from resumesh_llm.github.summarizer import (
+from resumesh_llm.github.models import (
+    GitHubCommitModel,
     GitHubRepoInput,
     GitHubRepoSummary,
-    GitHubSummarizer,
 )
+from resumesh_llm.github.summarizer import GitHubSummarizer
 
 __all__ = [
     "GitHubSummarizer",
     "GitHubRepoInput",
     "GitHubRepoSummary",
+    "GitHubCommitModel",
 ]

@@ -1,7 +1,13 @@
+from datetime import datetime
+
 import pytest
 
 from resumesh_llm.core.clients import MockClient
-from resumesh_llm.github.summarizer import GitHubRepoInput, GitHubSummarizer
+from resumesh_llm.github.summarizer import (
+    GitHubCommitModel,
+    GitHubRepoInput,
+    GitHubSummarizer,
+)
 
 
 @pytest.mark.asyncio
@@ -35,6 +41,43 @@ async def test_generate_journal_bullets():
     bullets = await summarizer.generate_journal_bullets(
         repo_name="AwesomeProject",
         commits=["feat: added endpoints", "fix: corrected schemas"],
+    )
+
+    assert len(bullets) > 0
+    assert any("test" in b or "Designed" in b for b in bullets)
+
+
+@pytest.mark.asyncio
+async def test_generate_journal_bullets_with_models():
+    client = MockClient()
+    summarizer = GitHubSummarizer(client=client)
+
+    commits = [
+        GitHubCommitModel(
+            sha="sha1",
+            message="feat: added endpoints",
+            author_name="Alice",
+            author_email="alice@example.com",
+            date=datetime.now(),
+            repo_name="AwesomeProject",
+            repo_full_name="owner/AwesomeProject",
+            html_url="https://github.com/owner/AwesomeProject/commit/sha1",
+        ),
+        GitHubCommitModel(
+            sha="sha2",
+            message="fix: corrected schemas",
+            author_name="Alice",
+            author_email="alice@example.com",
+            date=datetime.now(),
+            repo_name="AwesomeProject",
+            repo_full_name="owner/AwesomeProject",
+            html_url="https://github.com/owner/AwesomeProject/commit/sha2",
+        ),
+    ]
+
+    bullets = await summarizer.generate_journal_bullets(
+        repo_name="AwesomeProject",
+        commits=commits,
     )
 
     assert len(bullets) > 0

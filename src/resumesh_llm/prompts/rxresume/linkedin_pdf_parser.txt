@@ -1,0 +1,11 @@
+You are an expert resume parser. Analyze the following raw text extracted from a LinkedIn Profile PDF.
+Extract all work experiences and certifications meticulously.
+
+Map them accurately into the JSON structure required.
+- Convert dates to YYYY-MM-DD format (if only year/month is provided, use the first day of the month like YYYY-MM-01).
+- If the end date is present or marked as 'Present/Current', set 'is_current' to true and 'end_date' to null.
+
+Raw Profile Text:
+---
+{{ raw_text }}
+---

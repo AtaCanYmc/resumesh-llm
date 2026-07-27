@@ -1,44 +1,13 @@
 import json
 
-from pydantic import BaseModel, Field
-
 from resumesh_llm.core.clients import LLMClient
 from resumesh_llm.core.models import LLMRequest
 from resumesh_llm.core.prompt_loader import PromptLoader
-
-
-class GitHubRepoInput(BaseModel):
-    """Input payload representing a GitHub repository's raw data."""
-
-    repo_name: str = Field(description="Name of the repository")
-    description: str | None = Field(
-        default=None, description="Original description on GitHub"
-    )
-    readme_content: str | None = Field(
-        default=None, description="Partial or full content of the README.md"
-    )
-    languages: list[str] = Field(
-        default_factory=list, description="Primary programming languages detected"
-    )
-    stars: int = Field(default=0, description="Number of repository stargazers")
-    forks: int = Field(default=0, description="Number of repository forks")
-
-
-class GitHubRepoSummary(BaseModel):
-    """Structured summary output for a GitHub repository."""
-
-    summary: str = Field(
-        description="Professional, impact-driven description of the project suitable for a resume"
-    )
-    tags: list[str] = Field(
-        description="Refined and professional tags/topics describing the project"
-    )
-    languages: list[str] = Field(
-        description="Refined list of primary languages and frameworks utilized"
-    )
-    highlights: list[str] = Field(
-        description="Bullet points representing key technical accomplishments or features of the project"
-    )
+from resumesh_llm.github.models import (
+    GitHubCommitModel,
+    GitHubRepoInput,
+    GitHubRepoSummary,
+)
 
 
 class GitHubSummarizer:
@@ -118,19 +87,29 @@ class GitHubSummarizer:
             )
 
     async def generate_journal_bullets(
-        self, repo_name: str, commits: list[str]
+        self, repo_name: str, commits: list[GitHubCommitModel] | list[str]
     ) -> list[str]:
         """Pulls commit log messages and translates them into polished, outcome-driven resume bullet points using the Google XYZ formula.
 
         Args:
             repo_name: Name of the repository.
-            commits: List of raw commit messages.
+            commits: List of raw commit messages or GitHubCommitModel objects.
 
         Returns:
             List of polished bullet points.
         """
         if not commits:
             return []
+
+        # Extract commit messages if they are model instances
+        commit_messages = []
+        for commit in commits:
+            if isinstance(commit, str):
+                commit_messages.append(commit)
+            elif hasattr(commit, "message"):
+                commit_messages.append(commit.message)
+            else:
+                commit_messages.append(str(commit))
 
         system_instruction = PromptLoader.load_and_render(
             domain="github", template_name="journal_system"
@@ -140,7 +119,7 @@ class GitHubSummarizer:
             domain="github",
             template_name="journal_user",
             repo_name=repo_name,
-            commits=commits,
+            commits=commit_messages,
         )
 
         request = LLMRequest(

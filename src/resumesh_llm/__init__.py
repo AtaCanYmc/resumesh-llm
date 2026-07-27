@@ -24,12 +24,13 @@ from resumesh_llm.core.json_resume import (
 )
 from resumesh_llm.core.models import GenerationUsage, LLMRequest, LLMResponse
 from resumesh_llm.core.prompt_loader import PromptLoader
-from resumesh_llm.github.summarizer import (
+from resumesh_llm.github import (
+    GitHubCommitModel,
     GitHubRepoInput,
     GitHubRepoSummary,
     GitHubSummarizer,
 )
-from resumesh_llm.rxresume.optimizer import (
+from resumesh_llm.rxresume import (
     BulletPointOptimizationResult,
     CVOptimizer,
     JobAlignmentResult,
@@ -54,6 +55,7 @@ __all__ = [
     "GitHubSummarizer",
     "GitHubRepoInput",
     "GitHubRepoSummary",
+    "GitHubCommitModel",
     "CVOptimizer",
     "BulletPointOptimizationResult",
     "SkillExtractionResult",

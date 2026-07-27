@@ -1,52 +1,15 @@
 import json
-
-from pydantic import BaseModel, Field
+from typing import Any
 
 from resumesh_llm.core.clients import LLMClient
 from resumesh_llm.core.models import LLMRequest
 from resumesh_llm.core.prompt_loader import PromptLoader
-
-
-class BulletPointOptimizationResult(BaseModel):
-    """Result of bullet point optimization."""
-
-    original: str = Field(description="The original input bullet point")
-    optimized: str = Field(
-        description="The optimized version using the XYZ formula (Accomplished [X], measured by [Y], by doing [Z])"
-    )
-    explanation: str = Field(description="Explanation of what was changed and why")
-
-
-class SkillExtractionResult(BaseModel):
-    """Extracted skills categorized."""
-
-    hard_skills: list[str] = Field(
-        default_factory=list,
-        description="Technical/hard skills (e.g. Python, Docker, React)",
-    )
-    soft_skills: list[str] = Field(
-        default_factory=list,
-        description="Soft/methodological skills (e.g. Agile, Leadership, Communication)",
-    )
-    tools_and_platforms: list[str] = Field(
-        default_factory=list,
-        description="Tools and cloud platforms (e.g. AWS, Git, Jira)",
-    )
-
-
-class JobAlignmentResult(BaseModel):
-    """Result of analyzing CV alignment with a Job Description."""
-
-    match_score: int = Field(description="Match score between 0 and 100")
-    missing_skills: list[str] = Field(
-        description="Important skills or keywords from the job description that are missing from the CV"
-    )
-    matching_skills: list[str] = Field(
-        description="Skills that successfully match between the CV and job description"
-    )
-    suggestions: list[str] = Field(
-        description="Actionable, clear suggestions on how to improve the CV to align with the job description"
-    )
+from resumesh_llm.rxresume.models import (
+    BulletPointOptimizationResult,
+    JobAlignmentResult,
+    SkillExtractionResult,
+)
+from resumesh_llm.rxresume.utils import format_cv_to_text
 
 
 class CVOptimizer:
@@ -146,19 +109,21 @@ class CVOptimizer:
             return SkillExtractionResult()
 
     async def analyze_alignment(
-        self, cv_text: str, job_description: str
+        self, cv_text: str | dict | Any, job_description: str
     ) -> JobAlignmentResult:
-        """Analyzes a candidate's CV text against a Job Description to compute a match score,
+        """Analyzes a candidate's CV text or structured CV object against a Job Description to compute a match score,
 
         identify missing skills/keywords, and provide tailored improvement recommendations.
 
         Args:
-            cv_text: Raw text of the resume/CV.
+            cv_text: Raw text of the resume/CV, or JSONResume / dict representation of the resume.
             job_description: Raw text of the target job description.
 
         Returns:
             JobAlignmentResult.
         """
+        formatted_cv = format_cv_to_text(cv_text)
+
         system_instruction = PromptLoader.load_and_render(
             domain="rxresume", template_name="analyze_alignment_system"
         )
@@ -166,7 +131,7 @@ class CVOptimizer:
         prompt = PromptLoader.load_and_render(
             domain="rxresume",
             template_name="analyze_alignment_user",
-            cv_text=cv_text,
+            cv_text=formatted_cv,
             job_description=job_description,
         )
 
@@ -194,3 +159,53 @@ class CVOptimizer:
                 matching_skills=[],
                 suggestions=["Could not evaluate CV alignment. Please check inputs."],
             )
+
+    async def generate_tailored_cv(
+        self, job_description: str, user_context: str, response_model: type
+    ) -> Any:
+        """Generates a tailored resume matching a job description based on candidate profile context.
+
+        Args:
+            job_description: Cleaned job description text.
+            user_context: Context about user's skills, projects, experience, certificates, etc.
+            response_model: Pydantic model (ResumeImportData) to parse structured output into.
+
+        Returns:
+            An instance of response_model containing the tailored CV data.
+        """
+        prompt = PromptLoader.load_and_render(
+            domain="rxresume",
+            template_name="generate_cv",
+            job_description=job_description,
+            user_context=user_context,
+        )
+
+        request = LLMRequest(
+            prompt=prompt,
+            temperature=0.3,
+        )
+
+        return await self.client.generate_structured_output(request, response_model)
+
+    async def parse_linkedin_pdf_text(self, raw_text: str, response_model: type) -> Any:
+        """Parses raw text extracted from a LinkedIn profile PDF into structured schema data.
+
+        Args:
+            raw_text: Text extracted from LinkedIn PDF.
+            response_model: Pydantic model (LinkedInProfileDataSchema) to parse into.
+
+        Returns:
+            An instance of response_model.
+        """
+        prompt = PromptLoader.load_and_render(
+            domain="rxresume",
+            template_name="linkedin_pdf_parser",
+            raw_text=raw_text,
+        )
+
+        request = LLMRequest(
+            prompt=prompt,
+            temperature=0.3,
+        )
+
+        return await self.client.generate_structured_output(request, response_model)
