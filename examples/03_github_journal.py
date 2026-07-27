@@ -1,7 +1,8 @@
 import asyncio
 import os
+from datetime import datetime
 
-from resumesh_llm import GitHubSummarizer, LLMClientFactory
+from resumesh_llm import GitHubCommitModel, GitHubSummarizer, LLMClientFactory
 
 
 async def main():
@@ -13,12 +14,34 @@ async def main():
     )
     summarizer = GitHubSummarizer(client=client)
 
+    # Commits scraper model representation
     commits = [
-        "feat: added async state graph engine for agents",
-        "fix: resolved memory leak on heavy batches",
-        "docs: wrote 3-step quickstart in README.md",
+        GitHubCommitModel(
+            sha="c1b2a3",
+            message="feat: added async state graph engine for agents",
+            author_name="Alice Dev",
+            author_email="alice@example.com",
+            date=datetime.now(),
+            repo_name="resumesh-llm",
+            repo_full_name="owner/resumesh-llm",
+            html_url="https://github.com/owner/resumesh-llm/commit/c1b2a3",
+        ),
+        GitHubCommitModel(
+            sha="d4e5f6",
+            message="fix: resolved memory leak on heavy batches",
+            author_name="Alice Dev",
+            author_email="alice@example.com",
+            date=datetime.now(),
+            repo_name="resumesh-llm",
+            repo_full_name="owner/resumesh-llm",
+            html_url="https://github.com/owner/resumesh-llm/commit/d4e5f6",
+        ),
     ]
-    print("Commit History Logs:\n" + "\n".join(f" - {c}" for c in commits))
+
+    print(
+        "Commit History Logs (Models):\n"
+        + "\n".join(f" - {c.message} ({c.sha})" for c in commits)
+    )
 
     bullets = await summarizer.generate_journal_bullets(
         repo_name="resumesh-llm", commits=commits
