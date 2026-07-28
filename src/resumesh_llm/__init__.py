@@ -1,3 +1,4 @@
+from resumesh_llm._version import __version__
 from resumesh_llm.core.agent import BulletRefinementAgent
 from resumesh_llm.core.clients import (
     GroqClient,
@@ -46,6 +47,9 @@ from resumesh_llm.rxresume import (
 )
 
 __all__ = [
+    # Version
+    "__version__",
+    # Core
     "LLMError",
     "ProviderError",
     "ConfigurationError",

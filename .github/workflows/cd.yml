@@ -1,23 +1,26 @@
-name: Continuous Deployment
+name: CD — Publish to PyPI
 
 on:
   release:
     types: [published]
 
+  # Manual trigger for testing the pipeline without a release
+  workflow_dispatch:
+
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
-    name: Publish to PyPI
+  # ─── Build ────────────────────────────────────────────────────────────
+  build:
+    name: Build Distribution
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.11"
 
@@ -26,10 +29,71 @@ jobs:
           python -m pip install --upgrade pip
           pip install build
 
-      - name: Build package distribution
+      - name: Build sdist and wheel
         run: python -m build
 
-      - name: Publish package distributions to PyPI
+      - name: Verify package
+        run: |
+          pip install dist/*.whl
+          python -c "from resumesh_llm import __version__; print(f'Built v{__version__}')"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # ─── Test the built package ───────────────────────────────────────────
+  test-build:
+    name: Test Built Package
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout Code (for tests)
+        uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install from wheel
+        run: |
+          python -m pip install --upgrade pip
+          pip install dist/*.whl
+          pip install pytest pytest-asyncio pytest-cov respx
+
+      - name: Run tests against installed package
+        run: pytest tests/ -v
+
+  # ─── Publish to PyPI ──────────────────────────────────────────────────
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build, test-build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/resumesh-llm
+    permissions:
+      id-token: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          print-hash: true
