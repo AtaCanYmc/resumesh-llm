@@ -9,7 +9,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
 
 jobs:
   release-please:
@@ -21,29 +20,3 @@ jobs:
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
-
-      - name: Checkout Code (On Release)
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/checkout@v4
-
-      - name: Set up Python (On Release)
-        if: ${{ steps.release.outputs.release_created }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install build tools
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          python -m pip install --upgrade pip
-          pip install build
-
-      - name: Build package distribution
-        if: ${{ steps.release.outputs.release_created }}
-        run: python -m build
-
-      - name: Publish package distributions to PyPI
-        if: ${{ steps.release.outputs.release_created }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
