@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.5.0...resumesh-llm-v0.6.0) (2026-07-28)
+
+
+### Features
+
+* Add continuous deployment workflow for publishing to PyPI ([59c1b5e](https://github.com/AtaCanYmc/resumesh-llm/commit/59c1b5efe110e41b0fc4517b727ebbdb4305cbb3))
+* Add versioning and enhance CD workflow for PyPI publishing ([06c4bd6](https://github.com/AtaCanYmc/resumesh-llm/commit/06c4bd6f1cd92037f0547bbac1b8a10b8853a0bd))
+
 ## [0.5.0](https://github.com/AtaCanYmc/resumesh-llm/compare/resumesh-llm-v0.4.0...resumesh-llm-v0.5.0) (2026-07-27)
 
 
